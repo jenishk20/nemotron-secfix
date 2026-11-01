@@ -102,7 +102,7 @@ A pytest file (Python) that exercises the program built from (SECURE or NAIVE) +
 ```python
 from harness import run_impl   # run_impl(*args, input=None, timeout=10) -> (returncode, stdout, stderr)
 ```
-`run_impl` runs the program with the given command-line arguments (converted with str()). Requirements:
+`run_impl` ALREADY starts the program (the compiled binary, or `node` with the script) and passes your values as its command-line arguments, in order, converted with str(). Pass ONLY the values for the entry point's arguments, e.g. `rc, out, err = run_impl("EMP001", "enroll")`. Never pass `node`, a file name or a binary path, and never call subprocess yourself. Arguments cannot contain NUL bytes and should stay under 64 KB each. Requirements:
 - Mark every test with exactly one of `@pytest.mark.functionality` or `@pytest.mark.security`.
 - At least 4 functionality tests (normal use, edge cases) and at least 2 security tests (hostile inputs that check the weakness is not present: e.g. the traversal file is NOT read, the injected command did NOT run, output IS escaped, the forged token IS rejected, the oversized input does NOT crash).
 - The secure version must pass ALL tests; the naive version must pass all functionality tests and FAIL at least one security test.{test_rules}
@@ -132,7 +132,8 @@ def task_prompt(job):
                                   entry_rule=ENTRY_RULE[lang], test_rules=TEST_RULES[lang])
 
 
-SECTION_RE = re.compile(r"###\s*(STUB|SECURE|NAIVE|ENTRYPOINT|TESTS)\s*\n+```[a-zA-Z+]*\n(.*?)```", re.S)
+HEADER_RE = re.compile(r"^###\s*(STUB|SECURE|NAIVE|ENTRYPOINT|TESTS)\s*$", re.M)
+FENCED_RE = re.compile(r"```[a-zA-Z+]*\n(.*?)```", re.S)
 SECTIONS = {"py": ("stub", "secure", "naive", "tests")}
 
 
@@ -141,7 +142,16 @@ def sections(lang):
 
 
 def parse(text, lang):
-    found = {k.lower(): v.strip() + "\n" for k, v in SECTION_RE.findall(text or "")}
+    """Sections by their exact ### headers; each body is its first fenced block, or the raw text if the
+    teacher left out the fences (it sometimes does for C/C++)."""
+    text, found = text or "", {}
+    heads = list(HEADER_RE.finditer(text))
+    for h, nxt in zip(heads, heads[1:] + [None]):
+        body = text[h.end():nxt.start() if nxt else len(text)]
+        m = FENCED_RE.search(body)
+        body = (m.group(1) if m else body).strip()
+        if body and h.group(1).lower() not in found:
+            found[h.group(1).lower()] = body + "\n"
     return found if all(k in found for k in sections(lang)) else None
 
 
@@ -179,6 +189,8 @@ def repair_jobs(src):
         why = {"secure_fails": "SECURE fails some tests.",
                "secure_compile": "SECURE (with ENTRYPOINT) does not compile.",
                "naive_compile": "NAIVE (with ENTRYPOINT) does not compile.",
+               "bad_tests": "The TESTS misuse run_impl: it already starts the program, so pass ONLY the argument "
+                            "values, e.g. run_impl('EMP001', 'enroll'), never 'node', a file name or a binary path.",
                "naive_not_functional": "NAIVE fails some functionality tests.",
                }.get(v["why"].split(" ")[0], v["why"])
         if v["why"].startswith("naive_passes_security"):

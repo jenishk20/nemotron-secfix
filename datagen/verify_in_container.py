@@ -80,6 +80,9 @@ def verify(rec):
     if not func_name(rec):
         return dict(out, ok=False, why="name_mismatch")
     lang = rec.get("lang", "py")
+    # run_impl already starts the program; passing `node` or a script/binary name is a test bug, not a code bug
+    if lang != "py" and re.search(r"run_impl\(\s*['\"](node['\"]|[^'\"]*\.(js|out|exe)['\"])", rec["tests"]):
+        return dict(out, ok=False, why="bad_tests", log="tests pass `node` or the program file itself to run_impl")
     d = tempfile.mkdtemp(prefix="v_")
     env = impl_env(d, lang)
     try:
