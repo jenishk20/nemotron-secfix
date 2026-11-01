@@ -6,7 +6,7 @@
 # To reuse venvs you already have, point at them (nothing is installed into them):
 #   TRAIN_ENV=/scratch/$USER/glassbox_env VLLM_ENV=/scratch/$USER/passk_env bash cluster/setup.sh
 # If vLLM comes from the official container (VLLM_SIF=/path/vllm.sif), the env only gets the
-# small CWEval client packages, not vLLM itself.
+# small CWEval client packages, not vLLM itself. SKIP_VLLM=1 sets up training only.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY="${PY:-python3}"
@@ -30,7 +30,7 @@ if [[ ! -d "$TRAIN_ENV" ]]; then
   "$TRAIN_ENV"/bin/pip install torch --index-url https://download.pytorch.org/whl/cu128
   "$TRAIN_ENV"/bin/pip install "transformers==4.57.6" peft accelerate datasets
 fi
-if [[ ! -d "$VLLM_ENV" ]]; then
+if [[ -z "${SKIP_VLLM:-}" && ! -d "$VLLM_ENV" ]]; then
   $PY -m venv "$VLLM_ENV"
   "$VLLM_ENV"/bin/pip install -U pip
   if [[ -n "${VLLM_SIF:-}" ]]; then
@@ -40,10 +40,13 @@ if [[ ! -d "$VLLM_ENV" ]]; then
   fi
 fi
 "$TRAIN_ENV"/bin/python -c "import torch, transformers, peft; print('train env: torch', torch.__version__, 'cuda', torch.version.cuda, 'transformers', transformers.__version__, 'peft', peft.__version__)"
-"$VLLM_ENV"/bin/python -c "import litellm, fire, natsort, p_tqdm; print('client env ok')"
-if [[ -n "${VLLM_SIF:-}" ]]; then
+if [[ -n "${SKIP_VLLM:-}" ]]; then
+  echo "skipping vLLM / eval env (SKIP_VLLM=1)"
+elif [[ -n "${VLLM_SIF:-}" ]]; then
+  "$VLLM_ENV"/bin/python -c "import litellm, fire, natsort, p_tqdm; print('client env ok')"
   apptainer exec --nv "$VLLM_SIF" python3 -c "import vllm; print('vllm (container):', vllm.__version__)"
 else
+  "$VLLM_ENV"/bin/python -c "import litellm, fire, natsort, p_tqdm; print('client env ok')"
   "$VLLM_ENV"/bin/python -c "import vllm; print('vllm (venv):', vllm.__version__)"
 fi
 
