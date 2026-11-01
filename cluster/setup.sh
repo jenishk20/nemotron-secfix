@@ -26,7 +26,9 @@ TRAIN_ENV="${TRAIN_ENV:-env_train}"; VLLM_ENV="${VLLM_ENV:-env_vllm}"
 if [[ ! -d "$TRAIN_ENV" ]]; then
   $PY -m venv "$TRAIN_ENV"
   "$TRAIN_ENV"/bin/pip install -U pip
-  "$TRAIN_ENV"/bin/pip install torch "transformers==4.57.6" peft accelerate datasets
+  # CUDA 12.8 build: matches the cluster driver (570.x, CUDA 12.8)
+  "$TRAIN_ENV"/bin/pip install torch --index-url https://download.pytorch.org/whl/cu128
+  "$TRAIN_ENV"/bin/pip install "transformers==4.57.6" peft accelerate datasets
 fi
 if [[ ! -d "$VLLM_ENV" ]]; then
   $PY -m venv "$VLLM_ENV"
@@ -37,7 +39,7 @@ if [[ ! -d "$VLLM_ENV" ]]; then
     "$VLLM_ENV"/bin/pip install "vllm==0.27.1" litellm fire natsort p_tqdm python-dotenv
   fi
 fi
-"$TRAIN_ENV"/bin/python -c "import torch, transformers, peft; print('train env: torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"
+"$TRAIN_ENV"/bin/python -c "import torch, transformers, peft; print('train env: torch', torch.__version__, 'cuda', torch.version.cuda, 'transformers', transformers.__version__, 'peft', peft.__version__)"
 "$VLLM_ENV"/bin/python -c "import litellm, fire, natsort, p_tqdm; print('client env ok')"
 if [[ -n "${VLLM_SIF:-}" ]]; then
   apptainer exec --nv "$VLLM_SIF" python3 -c "import vllm; print('vllm (container):', vllm.__version__)"
