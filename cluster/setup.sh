@@ -28,7 +28,7 @@ if [[ ! -d "$TRAIN_ENV" ]]; then
   "$TRAIN_ENV"/bin/pip install -U pip
   # CUDA 12.8 build: matches the cluster driver (570.x, CUDA 12.8)
   "$TRAIN_ENV"/bin/pip install torch --index-url https://download.pytorch.org/whl/cu128
-  "$TRAIN_ENV"/bin/pip install "transformers==4.57.6" peft accelerate datasets
+  "$TRAIN_ENV"/bin/pip install "transformers==5.22.1" peft accelerate datasets
 fi
 if [[ -z "${SKIP_VLLM:-}" && ! -d "$VLLM_ENV" ]]; then
   $PY -m venv "$VLLM_ENV"

@@ -4,20 +4,25 @@ Trains with thinking OFF: the prompt is the chat template with enable_thinking=F
 (ends in "<think></think>"), loss only on the answer. Eval must use thinking off too.
 LoRA on attention q/k/v/o, Mamba in_proj, and the MoE shared experts. Not on Mamba
 out_proj (the fused Mamba kernel reads its weight directly, so LoRA there would not train)
-and not on the 128 routed experts.
+and not on the 128 routed experts. Needs transformers >= 5 (native nemotron_h), which loads
+the checkpoint's "backbone.*" weights as "model.*".
+
+--merge adds the LoRA deltas straight into a copy of the ORIGINAL safetensors shards (same
+names, same layout), so vLLM loads the tuned model exactly like the base.
 
 Usage: python sft_lora.py --model <path or HF id> --train secpy_train.jsonl --val secpy_val.jsonl --out runs/lora_v1
        python sft_lora.py --merge --model <base> --out runs/lora_v1   (writes runs/lora_v1/merged)
 """
-import argparse, json, os, shutil
+import argparse, glob, json, os, shutil
 
 import torch
+from safetensors.torch import load_file, save_file
 from datasets import Dataset
 from transformers import (AutoModelForCausalLM, AutoTokenizer, DataCollatorForSeq2Seq, Trainer,
                           TrainingArguments)
-from peft import LoraConfig, PeftModel, get_peft_model
+from peft import LoraConfig, get_peft_model
 
-TARGETS = r".*backbone\.layers\.\d+\.mixer\.(q_proj|k_proj|v_proj|o_proj|in_proj|shared_experts\.up_proj|shared_experts\.down_proj)"
+TARGETS = r".*layers\.\d+\.mixer\.(q_proj|k_proj|v_proj|o_proj|in_proj|shared_experts\.up_proj|shared_experts\.down_proj)"
 
 
 def encode(tok, row, max_len):
@@ -41,17 +46,34 @@ def load(tok, path, max_len):
 
 
 def merge(a):
-    tok = AutoTokenizer.from_pretrained(a.model)
-    base = AutoModelForCausalLM.from_pretrained(a.model, torch_dtype=torch.bfloat16, device_map="cuda")
-    model = PeftModel.from_pretrained(base, os.path.join(a.out, "adapter")).merge_and_unload()
-    out = os.path.join(a.out, "merged")
-    model.save_pretrained(out, safe_serialization=True, max_shard_size="5GB")
-    tok.save_pretrained(out)
-    # keep the original chat template file next to the weights (vLLM reads it)
-    src = a.model if os.path.isdir(a.model) else None
-    if src and os.path.exists(os.path.join(src, "chat_template.jinja")):
-        shutil.copy(os.path.join(src, "chat_template.jinja"), out)
-    print("merged model written to", out)
+    adir, out = os.path.join(a.out, "adapter"), os.path.join(a.out, "merged")
+    cfg = json.load(open(os.path.join(adir, "adapter_config.json")))
+    scale = cfg["lora_alpha"] / cfg["r"]
+    lora = load_file(os.path.join(adir, "adapter_model.safetensors"))
+    # "base_model.model.model.layers.5.mixer.q_proj.lora_A.weight" -> "layers.5.mixer.q_proj"
+    mods = {}
+    for k, v in lora.items():
+        name, part = k.rsplit(".lora_", 1)
+        name = name.removeprefix("base_model.model.").removeprefix("model.").removeprefix("backbone.")
+        mods.setdefault(name, {})[part.split(".")[0]] = v
+    os.makedirs(out, exist_ok=True)
+    for f in os.listdir(a.model):  # config, tokenizer, chat template, index...
+        if not f.endswith(".safetensors") and os.path.isfile(os.path.join(a.model, f)):
+            shutil.copy(os.path.join(a.model, f), out)
+    done = set()
+    for shard in sorted(glob.glob(os.path.join(a.model, "*.safetensors"))):
+        w = load_file(shard)
+        for key in w:
+            name = key.removesuffix(".weight").removeprefix("model.").removeprefix("backbone.")
+            if key.endswith(".weight") and name in mods:
+                A, B = mods[name]["A"].cuda().float(), mods[name]["B"].cuda().float()
+                w[key] = (w[key].cuda().float() + scale * (B @ A)).to(w[key].dtype).cpu()
+                done.add(name)
+        save_file(w, os.path.join(out, os.path.basename(shard)), metadata={"format": "pt"})
+        print("merged", os.path.basename(shard), flush=True)
+    missing = set(mods) - done
+    assert not missing, f"LoRA modules with no base weight: {sorted(missing)[:5]}"
+    print(f"merged {len(done)} LoRA modules (scale {scale}) into {out}")
 
 
 def main():
@@ -75,12 +97,15 @@ def main():
         tok.pad_token = tok.eos_token
     train, val = load(tok, a.train, a.max_len), load(tok, a.val, a.max_len)
 
-    model = AutoModelForCausalLM.from_pretrained(a.model, torch_dtype=torch.bfloat16, device_map="cuda")
+    model = AutoModelForCausalLM.from_pretrained(a.model, dtype=torch.bfloat16, device_map="cuda")
     model.config.use_cache = False
     model.enable_input_require_grads()
     model = get_peft_model(model, LoraConfig(r=a.rank, lora_alpha=2 * a.rank, lora_dropout=0.05,
                                              target_modules=TARGETS, task_type="CAUSAL_LM"))
     model.print_trainable_parameters()
+    n_lora = sum(1 for n, _ in model.named_modules() if n.endswith(".lora_A"))
+    print("LoRA modules:", n_lora)
+    assert n_lora > 0, "LoRA matched no layers; check TARGETS against model.named_modules()"
 
     args = TrainingArguments(
         output_dir=a.out, num_train_epochs=a.epochs, learning_rate=a.lr, lr_scheduler_type="cosine",
