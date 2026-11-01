@@ -28,3 +28,4 @@ logs/
 python/
 setup_log.txt
 .venv-art/
+wandb/

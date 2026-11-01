@@ -5,6 +5,8 @@
 #   wandb:<id>        W&B Inference, e.g. wandb:nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B
 #   openrouter/<id>   OpenRouter via litellm, e.g. openrouter/anthropic/claude-sonnet-5.5
 #                     (set GEN_THREADS=1: CWEval's forked workers hang on OpenRouter on macOS)
+#   wbtrain:<id>      a model fine-tuned on W&B Serverless Training (id from train/wandb_sft.py's
+#                     "inference model:" line); base URL from WBTRAIN_BASE_URL (its "base url:")
 #   vertex_ai/<id>    Gemini on Vertex AI, e.g. vertex_ai/gemini-3.5-flash (also needs GEN_THREADS=1);
 #                     uses GCP_PROJECT, GCP_LOCATION and GOOGLE_ADC_B64 from .env
 # Defaults: n=5, temperature 0.8, 8192 max tokens; pass e.g. --langs '["py"]' --ppt secure to override.
@@ -18,6 +20,10 @@ ARGS=(--n 5 --temperature 0.8 --max_completion_tokens 8192 --num_proc 4 --eval_p
 if [[ "$MODEL" == wandb:* ]]; then
   export OPENAI_API_KEY="$WANDB_API_KEY"
   ARGS+=(--model "openai/${MODEL#wandb:}" --api_base https://api.inference.wandb.ai/v1)
+elif [[ "$MODEL" == wbtrain:* ]]; then
+  : "${WBTRAIN_BASE_URL:?set WBTRAIN_BASE_URL to the base url printed by train/wandb_sft.py}"
+  export OPENAI_API_KEY="$WANDB_API_KEY"
+  ARGS+=(--model "openai/${MODEL#wbtrain:}" --api_base "$WBTRAIN_BASE_URL")
 else
   ARGS+=(--model "$MODEL")
 fi
