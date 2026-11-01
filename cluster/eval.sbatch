@@ -4,6 +4,7 @@
 #   MODEL=models/lightning-bf16 RUN=lightning_base_n5 sbatch cluster/eval.sbatch
 #   MODEL=runs/lora_v1/merged  RUN=lightning_lora_v1_n5 sbatch cluster/eval.sbatch
 #   THINK=on to evaluate with reasoning enabled; VLLM_ENV=/scratch/$USER/<venv> to use an existing venv
+#   VLLM_SIF=/scratch/$USER/vllm-0.27.1.sif to run vLLM from the official container (VLLM_ENV then only runs the client)
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:h200:1
@@ -19,7 +20,8 @@ cd /scratch/$USER/nemotron-secfix
 : "${MODEL:?set MODEL}" "${RUN:?set RUN}"
 VENV="$(cd "${VLLM_ENV:-env_vllm}" && pwd)"
 export HF_HOME=/scratch/$USER/hf_cache HF_HUB_OFFLINE=1 PYTHONUNBUFFERED=1
-"$VENV"/bin/vllm serve "$MODEL" --served-model-name secfix --port 8000 --max-model-len 16384 \
+if [[ -n "${VLLM_SIF:-}" ]]; then VLLM_CMD=(apptainer exec --nv --bind /scratch "$VLLM_SIF" vllm); else VLLM_CMD=("$VENV"/bin/vllm); fi
+"${VLLM_CMD[@]}" serve "$MODEL" --served-model-name secfix --port 8000 --max-model-len 16384 \
   --max-num-seqs 128 --enable-prefix-caching --mamba-ssm-cache-dtype float16 \
   --reasoning-parser nemotron_v3 > logs/vllm_$RUN.log 2>&1 &
 VLLM=$!

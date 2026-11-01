@@ -5,6 +5,8 @@
 #   cd /scratch/$USER/nemotron-secfix && bash cluster/setup.sh
 # To reuse venvs you already have, point at them (nothing is installed into them):
 #   TRAIN_ENV=/scratch/$USER/glassbox_env VLLM_ENV=/scratch/$USER/passk_env bash cluster/setup.sh
+# If vLLM comes from the official container (VLLM_SIF=/path/vllm.sif), the env only gets the
+# small CWEval client packages, not vLLM itself.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY="${PY:-python3}"
@@ -29,10 +31,19 @@ fi
 if [[ ! -d "$VLLM_ENV" ]]; then
   $PY -m venv "$VLLM_ENV"
   "$VLLM_ENV"/bin/pip install -U pip
-  "$VLLM_ENV"/bin/pip install "vllm==0.27.1" litellm fire natsort p_tqdm python-dotenv
+  if [[ -n "${VLLM_SIF:-}" ]]; then
+    "$VLLM_ENV"/bin/pip install litellm fire natsort p_tqdm python-dotenv numpy tqdm
+  else
+    "$VLLM_ENV"/bin/pip install "vllm==0.27.1" litellm fire natsort p_tqdm python-dotenv
+  fi
 fi
 "$TRAIN_ENV"/bin/python -c "import torch, transformers, peft; print('train env: torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"
-"$VLLM_ENV"/bin/python -c "import vllm, litellm, fire, natsort, p_tqdm; print('vllm env: vllm', vllm.__version__)"
+"$VLLM_ENV"/bin/python -c "import litellm, fire, natsort, p_tqdm; print('client env ok')"
+if [[ -n "${VLLM_SIF:-}" ]]; then
+  apptainer exec --nv "$VLLM_SIF" python3 -c "import vllm; print('vllm (container):', vllm.__version__)"
+else
+  "$VLLM_ENV"/bin/python -c "import vllm; print('vllm (venv):', vllm.__version__)"
+fi
 
 "$TRAIN_ENV"/bin/python - <<'PY'
 from huggingface_hub import snapshot_download
