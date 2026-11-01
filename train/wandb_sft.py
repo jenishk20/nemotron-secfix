@@ -2,9 +2,11 @@
 
 Same data as the H200 run (data/secpy_train.jsonl). Training runs on W&B/CoreWeave GPUs
 (free during the preview); each checkpoint is hosted for inference right after training.
-Needs: .venv/bin/pip install openpipe-art   and WANDB_API_KEY in .env.
+Needs openpipe-art >= 0.5.23 (Python >= 3.12), so it has its own venv, apart from .venv:
+  uv venv .venv-art --python 3.12 && uv pip install --python .venv-art/bin/python "openpipe-art>=0.5.23" python-dotenv
+and WANDB_API_KEY in .env.
 
-Usage: .venv/bin/python train/wandb_sft.py [--name secfix-sft-v1] [--epochs 2]
+Usage: .venv-art/bin/python train/wandb_sft.py [--name secfix-sft-v1] [--epochs 2]
 """
 import argparse, asyncio, os
 

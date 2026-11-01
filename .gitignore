@@ -27,3 +27,4 @@ logs/
 .tools/
 python/
 setup_log.txt
+.venv-art/
