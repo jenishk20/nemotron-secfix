@@ -1,0 +1,26 @@
+# secrets
+.env
+.env.*
+
+# large / generated data
+data/*.db
+data/*.sql
+data/*.jsonl
+outputs/
+third_party/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+data/synth/
+# training data the cluster needs (our own synthetic data, no secrets)
+!data/secpy_train.jsonl
+!data/secpy_val.jsonl
+# cluster artifacts
+env_train/
+env_vllm/
+models/
+runs/
+logs/
+.DS_Store
