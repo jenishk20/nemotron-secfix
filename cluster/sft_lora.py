@@ -109,7 +109,7 @@ def main():
 
     args = TrainingArguments(
         output_dir=a.out, num_train_epochs=a.epochs, learning_rate=a.lr, lr_scheduler_type="cosine",
-        warmup_ratio=0.03, per_device_train_batch_size=1, per_device_eval_batch_size=1,
+        warmup_steps=0.03, per_device_train_batch_size=1, per_device_eval_batch_size=1,
         gradient_accumulation_steps=a.grad_accum, bf16=True, gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False}, logging_steps=5,
         eval_strategy="epoch", save_strategy="epoch", save_total_limit=2, report_to=a.report_to,
