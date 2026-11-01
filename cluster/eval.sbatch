@@ -3,7 +3,7 @@
 # Scoring happens on the laptop in Docker (copy outputs/<run> back).
 #   MODEL=models/lightning-bf16 RUN=lightning_base_n5 sbatch cluster/eval.sbatch
 #   MODEL=runs/lora_v1/merged  RUN=lightning_lora_v1_n5 sbatch cluster/eval.sbatch
-#   THINK=on to evaluate with reasoning enabled
+#   THINK=on to evaluate with reasoning enabled; VLLM_ENV=/scratch/$USER/<venv> to use an existing venv
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:h200:1
@@ -17,8 +17,9 @@
 set -eo pipefail
 cd /scratch/$USER/nemotron-secfix
 : "${MODEL:?set MODEL}" "${RUN:?set RUN}"
+VENV="$(cd "${VLLM_ENV:-env_vllm}" && pwd)"
 export HF_HOME=/scratch/$USER/hf_cache HF_HUB_OFFLINE=1 PYTHONUNBUFFERED=1
-env_vllm/bin/vllm serve "$MODEL" --served-model-name secfix --port 8000 --max-model-len 16384 \
+"$VENV"/bin/vllm serve "$MODEL" --served-model-name secfix --port 8000 --max-model-len 16384 \
   --max-num-seqs 128 --enable-prefix-caching --mamba-ssm-cache-dtype float16 \
   --reasoning-parser nemotron_v3 > logs/vllm_$RUN.log 2>&1 &
 VLLM=$!
@@ -30,7 +31,7 @@ EXTRA=()
 [[ "${THINK:-off}" == off ]] && EXTRA=(--extra_body "{'chat_template_kwargs': {'enable_thinking': False}}")
 OVERWRITE=n; [[ -d outputs/$RUN ]] && OVERWRITE=y   # resume
 cd third_party/CWEval
-echo "$OVERWRITE" | OPENAI_API_KEY=EMPTY PYTHONPATH=$PWD ../../env_vllm/bin/python ../../scripts/gen_threaded.py \
+echo "$OVERWRITE" | OPENAI_API_KEY=EMPTY PYTHONPATH=$PWD "$VENV"/bin/python ../../scripts/gen_threaded.py \
   --threads 32 --model openai/secfix --api_base http://localhost:8000/v1 \
   --n 5 --temperature 0.8 --max_completion_tokens 8192 --eval_path ../../outputs/$RUN "${EXTRA[@]}"
 cd ../..

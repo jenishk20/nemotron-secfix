@@ -3,6 +3,8 @@
 # Clones CWEval (pinned + our patch), creates two venvs (training, vLLM serving),
 # downloads the model (~66 GB). Safe to re-run.
 #   cd /scratch/$USER/nemotron-secfix && bash cluster/setup.sh
+# To reuse venvs you already have, point at them (nothing is installed into them):
+#   TRAIN_ENV=/scratch/$USER/glassbox_env VLLM_ENV=/scratch/$USER/passk_env bash cluster/setup.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PY="${PY:-python3}"
@@ -18,20 +20,21 @@ if [[ ! -d third_party/CWEval ]]; then
 fi
 grep -q "f.write(resp or '')" third_party/CWEval/cweval/generate.py && echo "CWEval patched"
 
-if [[ ! -d env_train ]]; then
-  $PY -m venv env_train
-  env_train/bin/pip install -U pip
-  env_train/bin/pip install torch "transformers==4.57.6" peft accelerate datasets
+TRAIN_ENV="${TRAIN_ENV:-env_train}"; VLLM_ENV="${VLLM_ENV:-env_vllm}"
+if [[ ! -d "$TRAIN_ENV" ]]; then
+  $PY -m venv "$TRAIN_ENV"
+  "$TRAIN_ENV"/bin/pip install -U pip
+  "$TRAIN_ENV"/bin/pip install torch "transformers==4.57.6" peft accelerate datasets
 fi
-if [[ ! -d env_vllm ]]; then
-  $PY -m venv env_vllm
-  env_vllm/bin/pip install -U pip
-  env_vllm/bin/pip install "vllm==0.27.1" litellm fire natsort p_tqdm python-dotenv
+if [[ ! -d "$VLLM_ENV" ]]; then
+  $PY -m venv "$VLLM_ENV"
+  "$VLLM_ENV"/bin/pip install -U pip
+  "$VLLM_ENV"/bin/pip install "vllm==0.27.1" litellm fire natsort p_tqdm python-dotenv
 fi
-env_train/bin/python -c "import torch, transformers, peft; print('train env: torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"
-env_vllm/bin/python -c "import vllm, litellm; print('vllm env: vllm', vllm.__version__)"
+"$TRAIN_ENV"/bin/python -c "import torch, transformers, peft; print('train env: torch', torch.__version__, 'transformers', transformers.__version__, 'peft', peft.__version__)"
+"$VLLM_ENV"/bin/python -c "import vllm, litellm, fire, natsort, p_tqdm; print('vllm env: vllm', vllm.__version__)"
 
-env_train/bin/python - <<'PY'
+"$TRAIN_ENV"/bin/python - <<'PY'
 from huggingface_hub import snapshot_download
 p = snapshot_download("nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
                       local_dir="models/lightning-bf16", allow_patterns=["*.json", "*.safetensors", "*.jinja", "*.txt", "LICENSE"])
