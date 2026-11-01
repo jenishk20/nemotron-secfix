@@ -24,6 +24,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -102,14 +103,24 @@ def main():
         results = dict(ex.map(lambda t: score_one(t, a.timeout), tests))
 
     # 4. write res.json per sample folder + a summary
-    per_task = defaultdict(list)
     for g in gen_dirs:
         res = {k: v for k, v in results.items() if k.startswith(g + os.sep)}
         with open(os.path.join(g, "res.json"), "w") as f:
             json.dump(res, f, indent=2)
+    summarize(a.eval_path)
+
+
+def summarize(eval_path):
+    """summary.json from the generated_*/res.json files (also used by score_sandbox.py to merge shards)."""
+    results, per_task = {}, defaultdict(list)
+    for g in sorted(glob.glob(os.path.join(eval_path, "generated_*"))):
+        if not os.path.exists(os.path.join(g, "res.json")):
+            continue
+        res = json.load(open(os.path.join(g, "res.json")))
+        results.update(res)
         for k, v in res.items():
             # key by language folder too: core/c and lang/c can share CWE ids
-            per_task[os.path.relpath(k, g).split("_test")[0]].append(v)
+            per_task[re.split(r"generated_\d+/", k)[-1].split("_test")[0]].append(v)
 
     def pass1(include):
         rows = [[v for v in vs if include(v)] for vs in per_task.values()]
@@ -129,10 +140,11 @@ def main():
                          "func_sec": sum(v["functional"] and v["secure"] for v in vs)}
                      for t, vs in sorted(per_task.items())},
     }
-    with open(os.path.join(a.eval_path, "summary.json"), "w") as f:
+    with open(os.path.join(eval_path, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     print(json.dumps({k: summary[k] for k in ["tasks", "samples", "timeouts", "no_code",
                                               "cweval_compat", "strict"]}, indent=2))
+    return summary
 
 
 if __name__ == "__main__":

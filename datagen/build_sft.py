@@ -3,9 +3,11 @@
 The user turn is exactly CWEval's `direct` prompt (what the model sees at eval
 time); the assistant turn is the verified secure module in one code block.
 Usage: .venv/bin/python datagen/build_sft.py data/synth/py_pilot.jsonl [more.jsonl ...] \
-         --out data/train_sec.jsonl [--holdout-cwes 117,643]
+         --out data/train_sec.jsonl [--holdout-cwes 117,643] [--per-lang 250] [--val 0]
+--per-lang N keeps N examples per language, spread evenly over CWEs (round-robin, seeded);
+--val M also writes M held-out rows per language to <out>.val.jsonl.
 """
-import argparse, difflib, glob, json, os, re, sys
+import argparse, difflib, glob, json, os, random, re, sys
 from collections import Counter
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
@@ -35,8 +37,14 @@ def ngrams(s, n=8):
     return {" ".join(w[i:i + n]) for i in range(len(w) - n + 1)}
 
 
+def stub_name(stub):
+    """Function name from a stub: Python `def f(`, or a C/C++/JS signature line ending in `{`."""
+    m = re.search(r"def\s+(\w+)\s*\(", stub) or re.search(r"(\w+)\s*\([^()]*\)\s*(?:const\s*)?\{\s*$", stub.rstrip())
+    return m.group(1)
+
+
 def leaks(stub, bench):
-    name = re.search(r"def\s+(\w+)\s*\(", stub).group(1)
+    name = stub_name(stub)
     s = norm(stub); g = ngrams(s)
     for path, names, b in bench:
         if name in names:
@@ -53,10 +61,13 @@ def main():
     ap.add_argument("inputs", nargs="+")
     ap.add_argument("--out", default="data/train_sec.jsonl")
     ap.add_argument("--holdout-cwes", default="")
+    ap.add_argument("--per-lang", type=int, default=0)
+    ap.add_argument("--val", type=int, default=0)
+    ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
     holdout = {int(x) for x in a.holdout_cwes.split(",") if x}
     bench = cweval_prompts()
-    rows, why, kept_cwe = [], Counter(), Counter()
+    rows, why, kept_cwe, seen = [], Counter(), Counter(), set()
     for inp in a.inputs:
         ver = {r["id"]: r for r in map(json.loads, open(inp.replace(".jsonl", ".verify.jsonl")))}
         for rec in map(json.loads, open(inp)):
@@ -64,18 +75,46 @@ def main():
                 why["not_verified"] += 1; continue
             if rec["cwe"] in holdout:
                 why["holdout"] += 1; continue
+            if rec["id"] in seen:  # an id verified in more than one repair round
+                why["duplicate"] += 1; continue
+            seen.add(rec["id"])
             if (l := leaks(rec["stub"], bench)):
                 why["leak"] += 1; print("LEAK", rec["id"], l); continue
             user = DirectPrompt.PPT.format(lang=rec["lang"], lang_instr=DirectPrompt.LANG_INSTR[rec["lang"]],
                                            code_prompt=rec["stub"].rstrip("\n"))
             asst = f"```{FENCE[rec['lang']]}\n{rec['secure'].rstrip()}\n```"
-            rows.append({"messages": [{"role": "user", "content": user}, {"role": "assistant", "content": asst}]})
-            kept_cwe[rec["cwe"]] += 1
-    with open(a.out, "w") as f:
-        for r in rows:
-            f.write(json.dumps(r) + "\n")
-    print(f"wrote {len(rows)} rows to {a.out}; dropped {dict(why)}")
-    print("per CWE:", dict(sorted(kept_cwe.items())))
+            rows.append({"lang": rec["lang"], "cwe": rec["cwe"],
+                         "messages": [{"role": "user", "content": user}, {"role": "assistant", "content": asst}]})
+
+    train, val = rows, []
+    if a.per_lang or a.val:
+        rng, train = random.Random(a.seed), []
+        for lang in sorted({r["lang"] for r in rows}):
+            by_cwe = {}
+            for r in rows:
+                if r["lang"] == lang:
+                    by_cwe.setdefault(r["cwe"], []).append(r)
+            for lst in by_cwe.values():
+                rng.shuffle(lst)
+            picked, want = [], (a.per_lang or 10**9) + a.val
+            while len(picked) < want and any(by_cwe.values()):  # round-robin over CWEs
+                for c in sorted(by_cwe):
+                    if by_cwe[c] and len(picked) < want:
+                        picked.append(by_cwe[c].pop())
+            rng.shuffle(picked)
+            val += picked[:a.val]
+            train += picked[a.val:]
+            print(f"{lang}: {len(picked) - a.val} train + {min(a.val, len(picked))} val (of {sum(r['lang'] == lang for r in rows)} available)")
+        rng.shuffle(train)
+    for path, part in [(a.out, train)] + ([(a.out.replace(".jsonl", ".val.jsonl"), val)] if a.val else []):
+        with open(path, "w") as f:
+            for r in part:
+                f.write(json.dumps({"messages": r["messages"]}) + "\n")
+        print(f"wrote {len(part)} rows to {path}")
+    for r in train:
+        kept_cwe[(r["lang"], r["cwe"])] += 1
+    print(f"dropped {dict(why)}")
+    print("per language/CWE:", dict(sorted(kept_cwe.items())))
 
 
 if __name__ == "__main__":
