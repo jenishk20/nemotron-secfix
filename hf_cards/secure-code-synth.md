@@ -61,14 +61,6 @@ before it was kept**. For defensive use: secure code generation and fixing, not 
 | `repair_rounds` | 0 = passed first time, 1-2 = passed after the teacher fixed it |
 | `teacher` | model that wrote the task |
 
-## What we learned so far
-
-Fine-tuning NVIDIA Nemotron 3.5 Lightning 30B-A3B on the Python-only SFT file raised Python
-security on CWEval (52.8% -> 57.6% works+secure), but hurt the other languages (all-language
-45.0% -> 38.2%): with only Python examples, the model drifted toward Python-style answers
-everywhere. That is why the C/C++/JS sets exist. RL with these tasks' tests as the reward is in
-progress.
-
 **Warning:** `insecure_solution` fields and some test inputs are deliberately vulnerable or
 hostile. Never deploy them. Generated with NVIDIA Nemotron 3 Ultra; check that model's license
 terms before any non-research use.

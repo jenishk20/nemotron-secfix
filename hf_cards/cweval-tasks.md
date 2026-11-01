@@ -47,7 +47,6 @@ Overall (100 tasks, Go excluded because its tests need network access):
 | Nemotron 3.5 Super VL 120B | 86.4 | 58.4 |
 | Nemotron 3.5 Lightning 30B-A3B, thinking off | 76.2 | 45.0 |
 | Nemotron 3.5 Lightning 30B-A3B, thinking on | 76.6 | 50.6 |
-| Lightning 30B-A3B + SFT v1 (Python-only data) | 49.4 | 38.2 |
 | Gemini 3.5 Flash | 91.0 | 66.6 |
 | Muse Glimmer 30B | 85.2 | 60.4 |
 | Claude Sonnet 5.5 (Python tasks only) | 96.0 | 87.2 |

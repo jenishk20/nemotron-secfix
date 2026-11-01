@@ -20,7 +20,6 @@ RUNS = {
     "base_wandb_all_n5": "Nemotron 3.5 Super VL 120B (base)",
     "lightning_wandb_nothink_n5": "Nemotron 3.5 Lightning 30B-A3B (base, thinking off)",
     "lightning_wandb_think_n5": "Nemotron 3.5 Lightning 30B-A3B (base, thinking on)",
-    "lightning_wbsft_v1_nothink_n5": "Lightning 30B-A3B + SFT v1 (Python-only data)",
     "gemini35flash_all_n5": "Gemini 3.5 Flash",
     "glimmer30b_or_all_n5": "Muse Glimmer 30B (base)",
     "sonnet55_or_py_n5": "Claude Sonnet 5.5 (Python tasks only)",
