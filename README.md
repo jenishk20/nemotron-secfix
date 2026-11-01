@@ -283,3 +283,20 @@ MODEL=runs/lora_v1/merged  RUN=lightning_lora_v1_n5 sbatch cluster/eval.sbatch
 
 Eval jobs only generate answers (thinking off, same settings as every other row); copy
 `outputs/<run>` back and score on the laptop with `scripts/score.sh <run>`.
+
+### Nemotron 3.5 Lightning 30B-A3B base (W&B Inference), all languages, n=5, strict
+
+The model we fine-tune on the H200 and on W&B Serverless Training. Thinking off is the row to
+compare the tuned model against (the SFT data has no reasoning).
+
+| Lang | Lightning, thinking off | Lightning, thinking on | Nemotron Super 120B | Gemini 3.5 Flash |
+|---|---|---|---|---|
+| core/c | 54.0 / 20.0 | 64.0 / 32.0 | 82.0 / 39.0 | 90.0 / 55.0 |
+| core/cpp | 69.5 / 35.2 | 68.6 / 41.0 | 81.0 / 48.6 | 89.5 / 66.7 |
+| core/js | 83.5 / 53.9 | 71.3 / 49.6 | 83.5 / 64.3 | 86.1 / 67.0 |
+| core/py | 84.0 / 52.8 | 91.2 / 62.4 | 91.2 / 63.2 | 93.6 / 64.8 |
+| lang/c | 96.4 / 72.7 | 92.7 / 78.2 | 100.0 / 89.1 | 100.0 / 90.9 |
+| **All except Go** | **76.2 / 45.0** | 76.6 / 50.6 | 86.4 / 58.4 | 91.0 / 66.6 |
+
+Thinking on: 28 of 595 answers empty (reasoning used the whole 8192-token budget); counted as failures.
+Runs: `lightning_wandb_nothink_n5` (`--extra_body "{'chat_template_kwargs': {'enable_thinking': False}}"`), `lightning_wandb_think_n5`.
