@@ -17,38 +17,52 @@
 
 ## 2. Training data: how it is generated
 
-```
-Nemotron 3 Ultra 550B (W&B Inference)              Nemotron 3.5 Super 120B (W&B Inference)
-  spec + secure ref + vulnerable ref + tests   ──▶   answers each task with reasoning + security hint
-  kept only if, in CWEval's Docker image (offline):    each answer run against the task's tests in an
-   • secure ref passes all (≥4 func, ≥2 sec tests)       offline W&B Sandbox; keep answers passing ALL
-   • vulnerable ref is functional but FAILS ≥1           ──▶ SFT row: plain CWEval prompt → final code
-     security test                                      (reasoning removed; ≤2-3 distinct answers/task)
-  + up to 2 repair rounds; + CWEval leakage filter
-```
+**Short version:**
+- Every training answer was written by **Nemotron 3.5 Super 120B itself** (self-distillation).
+- **No frontier-model outputs or reasoning traces** (Gemini, DeepSeek, Beam, Claude, ...) are used
+  anywhere in training.
+- Frontier models were only *evaluated* on the test set.
 
-**Synthetic task pool:**
+### Who produced what
 
-| Set | Tasks | Languages | Purpose |
+| Part of a training example | Produced by | Where | Kept? |
 |---|---|---|---|
-| Core pool | **1,813** verified | Python 1,009 · C++ 279 · JS 275 · C 250 | 96 CWE × language combinations (`datagen/catalog.py`) |
-| v3 targeted | **119** verified (131 before the leakage filter) | Python 43 · C++ 39 · C 19 · JS 18 | CWE-113 header injection, CWE-79 XSS, CWE-918 SSRF (all languages); CWE-347 JWT (C/C++); CWE-327/329 crypto (C++) |
+| Task spec, secure + vulnerable reference solutions, functionality + attack tests | **Nemotron 3 Ultra 550B** (`nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B`), the "teacher" | W&B Inference | Only to **define tasks**; its code is never a training answer |
+| Check that each task's tests actually catch the vulnerability | CWEval's Docker image, offline | local Docker / W&B Sandboxes | Task kept only if it passes |
+| **The training answer** (the code the model learns to write) | **Nemotron 3.5 Super 120B**, the same model we fine-tune, with reasoning on + a security hint | W&B Inference | Only if it passes **all** the task's tests in an offline sandbox |
+| Its **reasoning trace** | Nemotron 120B | — | **Dropped.** We train on the final code only, with the plain prompt (no hint) |
 
-**SFT datasets** (each passed `datagen/check_sft.py`: chat format, no duplicates, no leaked reasoning,
-no CWEval overlap):
+### Step by step
+1. **Tasks** (`datagen/teacher.py`).
+   - The 550B teacher writes, for a given CWE and application domain: a function spec, a secure
+     solution, a deliberately vulnerable solution, and pytest tests (≥4 functionality, ≥2 security).
+2. **Task verification** (`datagen/verify_in_container.py`), offline.
+   - A task is kept only if the secure solution passes every test, the vulnerable one passes the
+     functionality tests **and fails ≥1 security test**.
+   - Failures get up to 2 repair rounds with the error log.
+   - The CWEval leakage filter is applied afterwards.
+3. **Answers** (`datagen/self_distill.py`).
+   - The 120B answers each task with CWEval's prompt + "Your code should be secure…", **thinking on**.
+   - Each answer runs against that task's own tests in an offline W&B Sandbox.
+4. **Training rows.**
+   - Only answers passing **all** tests are kept, at most 2–3 distinct answers per task.
+   - Each row is `{user: plain CWEval prompt, assistant: final code block}`.
 
-| Fireworks dataset | Rows | Built from | Used for |
-|---|---|---|---|
-| `secfix-120b-sd-v1` | 1,073 | 120B, **thinking off** + hint, 4 answers per task, ≤2 kept per task | imported, **never trained** (superseded by thinking-mode data) |
-| `secfix-120b-think-v1` | 1,036 | 120B, **thinking on** + hint, 2 answers per task, ≤2 kept | **CyberNemo v1** |
-| `secfix-120b-think-v2` | 1,372 | v1 + 2 more thinking answers for each C/C++/JS task, ≤3 kept per task | **CyberNemo v2** |
-| `secfix-120b-v3` | 1,132 | v1's 1,036 rows + **96** rows from the v3 targeted tasks | **CyberNemo v3** |
-| `secfix-gcs-test`, `upload-test` | 20 each | first 20 rows of v1 | import tests only (direct upload is disabled on our accounts) |
+### The three training datasets (all on Fireworks, imported from a private GCS bucket)
 
-- **Import route:** every dataset was imported from the private bucket `gs://<FW_BUCKET>/<name>.jsonl`
-  (`scripts/fireworks_sft.py`), because direct uploads are disabled on our Fireworks accounts.
-- **Other datasets:** the `onboarding-*` datasets and the `demo-gsm8k` job are Fireworks' own
-  onboarding examples, not part of this project.
+| Dataset | Rows | Tasks it draws on | Answers sampled per task (120B, thinking on) | Rows kept per task | Trained model |
+|---|---|---|---|---|---|
+| `secfix-120b-think-v1` | **1,036** | 1,813 core tasks (Py 1,009 · C++ 279 · JS 275 · C 250) | 2 | ≤2 | **CyberNemo v1** |
+| `secfix-120b-think-v2` | **1,372** | the same 1,813 tasks | 2 (Python) / **4** (C, C++, JS) | ≤3 | **CyberNemo v2** |
+| `secfix-120b-v3` | **1,132** | v1's rows + **119 new targeted tasks** (CWE-113 header injection, CWE-79 XSS, CWE-918 SSRF, CWE-347 JWT, CWE-327/329 crypto) | 4 on the new tasks | ≤3 | **CyberNemo v3** |
+
+- **v2 vs v1:** same tasks; more answers sampled for C/C++/JS, where v1 was weakest. That gives
+  ~70% more C/C++/JS rows.
+- **v3 vs v1:** new tasks for the CWE families found in the error analysis.
+  - Only 96 new rows survived: the 120B rarely passes these tasks even with reasoning.
+  - Only the *choice of families* was informed by CWEval; no CWEval content is used.
+- **`secfix-120b-sd-v1`** (1,073 rows, 120B with thinking **off**) was imported to Fireworks but never
+  trained. The thinking-mode data replaced it.
 
 ## 3. Models trained on Fireworks
 Base: `accounts/fireworks/models/nvidia-nemotron-3p5-super-vl-120b-a12b-bf16`. LoRA rank 16, 1 epoch,
