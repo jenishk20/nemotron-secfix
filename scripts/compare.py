@@ -22,6 +22,7 @@ RUNS = [  # (label, run, how it was produced)
     ("**Ours: Nemotron 120B CyberNemo v1 (thinking off)**", "sft120_think_v1_n10", "Fireworks LoRA, dedicated deployment"),
     ("**Ours: Nemotron 120B CyberNemo v2 (thinking off)**", "sft120_think_v2_n10", "Fireworks LoRA, dedicated deployment"),
     ("**Ours: Nemotron 120B CyberNemo v2 (thinking on)**", "sft120_think_v2_n10_thinkon", "Fireworks LoRA, dedicated deployment"),
+    ("**Ours: CyberNemo v2 (thinking) + security review**", "sft120_think_v2_n10_thinkon_review", "Fireworks LoRA + scripts/review_pass.py (869 answers)"),
     ("Nemotron 3.5 Lightning 30B, base", "lightning_nothink_n10", "W&B Inference"),
 ]
 
@@ -36,13 +37,14 @@ def table():
     for label, run, _ in RUNS:
         if not os.path.exists(os.path.join(RES, run, "summary.json")):
             continue
-        agg = collections.defaultdict(lambda: [0, 0, 0])
-        for k, v in per_task(run).items():
+        agg = collections.defaultdict(lambda: [0, 0.0, 0.0])  # CWEval pass@1: mean over tasks of per-task rate
+        pt = per_task(run)
+        for k, v in pt.items():
             lang = k.split("/")[1]
             for key in (lang, "all"):
-                a = agg[key]; a[0] += v["n"]; a[1] += v["func"]; a[2] += v["func_sec"]
+                a = agg[key]; a[0] += 1; a[1] += v["func"] / v["n"]; a[2] += v["func_sec"] / v["n"]
         f = lambda k, i: f"{100 * agg[k][i] / agg[k][0]:.1f}" if agg[k][0] else "-"
-        n = agg["all"][0] // 100
+        n = round(sum(v["n"] for v in pt.values()) / len(pt))
         print(f"| {label} | {n} | {f('all', 1)} | {f('all', 2)} | {f('c', 2)} | {f('cpp', 2)} | {f('js', 2)} | {f('py', 2)} |")
     print("\nPer-language columns are works+secure; C pools CWEval's core/c and lang/c suites.")
 
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     if a.collect:
         for _, run, _ in RUNS:
             src = os.path.join(ROOT, "outputs", run, "summary.json")
-            if os.path.exists(src):
+            if os.path.exists(src) and run != "sft120_think_v2_n10_thinkon_review":  # rebuilt by summarize_existing.py
                 os.makedirs(os.path.join(RES, run), exist_ok=True)
                 shutil.copy(src, os.path.join(RES, run, "summary.json"))
     table()

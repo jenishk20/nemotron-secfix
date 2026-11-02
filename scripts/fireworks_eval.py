@@ -39,6 +39,7 @@ def main():
     ap.add_argument("--max_minutes", type=float, default=7)  # hard cap on billed time after READY
     ap.add_argument("--thinking_n", type=int, default=0)     # also run <run>_thinkon with reasoning on (n answers/task)
     ap.add_argument("--bench", action="store_true")          # also run the speed benchmark (30 prompts, 4 concurrent)
+    ap.add_argument("--review", action="store_true")         # also run the self-review harness on the thinking-mode answers
     ap.add_argument("--wait_minutes", type=float, default=40)
     a = ap.parse_args()
     t0, dep = time.time(), None
@@ -67,6 +68,10 @@ def main():
             steps.append([sys.executable, os.path.join(ROOT, "scripts", "fast_gen.py"), f"{a.run}_thinkon",
                           f"fireworks:{target}", "--n", str(a.thinking_n), "--concurrency", str(a.concurrency),
                           "--default_mode", "--max_tokens", "16384"])
+        if a.review and a.thinking_n:
+            steps.append([sys.executable, os.path.join(ROOT, "scripts", "review_pass.py"), f"{a.run}_thinkon",
+                          f"{a.run}_thinkon_review", f"fireworks:{target}", "--thinking", "--concurrency", str(a.concurrency),
+                          "--max_tokens", "16384"])
         for step in steps:  # in priority order; the cap stops whatever is still running
             log("running", os.path.basename(step[1]), step[2])
             p = subprocess.Popen(step)
