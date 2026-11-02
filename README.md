@@ -204,4 +204,4 @@ control-plane account a custom role with `storage.buckets.getIamPolicy`.
 - Fine-tuning and serving: **Fireworks AI**.
 - Data generation and sandboxes: Weights & Biases / CoreWeave.
 
-**Team:** _add names_
+**Team:** Arjun Prasaath Anbazhagan (lead), Jenish Kothari
