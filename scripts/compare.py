@@ -22,6 +22,7 @@ RUNS = [  # (label, run, how it was produced)
     ("**Ours: Nemotron 120B CyberNemo v1 (thinking off)**", "sft120_think_v1_n10", "Fireworks LoRA, dedicated deployment"),
     ("**Ours: Nemotron 120B CyberNemo v2 (thinking off)**", "sft120_think_v2_n10", "Fireworks LoRA, dedicated deployment"),
     ("**Ours: Nemotron 120B CyberNemo v2 (thinking on)**", "sft120_think_v2_n10_thinkon", "Fireworks LoRA, dedicated deployment"),
+    ("**Ours: CyberNemo v3 (thinking)**", "sftv3_thinkon", "Fireworks LoRA, dedicated deployment"),
     ("**Ours: CyberNemo v2 (thinking) + security review**", "sft120_think_v2_n10_thinkon_review", "Fireworks LoRA + scripts/review_pass.py (869 answers)"),
     ("Nemotron 3.5 Lightning 30B, base", "lightning_nothink_n10", "W&B Inference"),
 ]
