@@ -2,13 +2,13 @@
 
 AI coding assistants often write code that **works but can be hacked**. CyberNemo is NVIDIA Nemotron
 3.5 Super 120B, fine-tuned on Fireworks so that it writes the **secure** version of a function by
-default. It answers in about **1 second with about 300 tokens**; frontier models reason for 12–18 s
-and 1,800–4,000 tokens to get there.
+default, with no security prompt. In fast mode it answers in about **1 second with about 300 tokens**.
+Frontier models reason for 7–18 s and 1,800–4,000 tokens per answer.
 
 | CWEval, 100 tasks | Nemotron 120B base | **CyberNemo** | Change (95% CI) |
 |---|---|---|---|
 | Works + secure (fast mode) | 53.2 | **59.3** | **+6.1** (+2.3 to +10.1) |
-| Works + secure (thinking mode) | 58.4 | **63.6** | +10.4 vs fast base (+5.9 to +15.0) |
+| Works + secure (thinking mode) | 58.4 | **63.6** | **+5.2** (+1.0 to +9.6) |
 | Works (functionality only) | 82.5 | 82.8 | +0.3 (−2.5 to +3.2): nothing broken |
 | Median latency / output tokens (fast mode) | 0.85 s / 293 | **1.08 s / 308** | frontier: 7–18 s / 1.8k–4k |
 
