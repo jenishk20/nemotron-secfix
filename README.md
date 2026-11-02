@@ -2,15 +2,17 @@
 
 AI coding assistants often write code that **works but can be hacked**. CyberNemo is NVIDIA Nemotron
 3.5 Super 120B, fine-tuned on Fireworks so that it writes the **secure** version of a function by
-default, with no security prompt. In fast mode it answers in about **1 second with about 300 tokens**.
-Frontier models reason for 7–18 s and 1,800–4,000 tokens per answer.
+default, with no security prompt.
 
-| CWEval, 100 tasks | Nemotron 120B base | **CyberNemo** | Change (95% CI) |
+| CWEval, 100 tasks (thinking mode) | Nemotron 120B base | **CyberNemo** | Change (95% CI) |
 |---|---|---|---|
-| Works + secure (fast mode) | 53.2 | **59.3** | **+6.1** (+2.3 to +10.1) |
-| Works + secure (thinking mode) | 58.4 | **63.6** | **+5.2** (+1.0 to +9.6) |
-| Works (functionality only) | 82.5 | 82.8 | +0.3 (−2.5 to +3.2): nothing broken |
-| Median latency / output tokens (fast mode) | 0.85 s / 293 | **1.08 s / 308** | frontier: 7–18 s / 1.8k–4k |
+| Works + secure | 58.4 | **63.6** | **+5.2** (+1.0 to +9.6) |
+| Works (functionality only) | 86.4 | 86.4 | 0.0 (−2.8 to +2.4): nothing broken |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/secure_rate-dark.svg">
+  <img alt="Working and secure code rate by system" src="docs/img/secure_rate.svg" width="760">
+</picture>
 
 ---
 
@@ -77,6 +79,7 @@ every time we tried.
 - **Statistics:** paired bootstrap over the 100 tasks, 95% CI (`scripts/compare.py`).
 
 ## Results
+All systems reason before answering (thinking or default mode).
 
 | System | Works | **Works + secure** | C | C++ | JS | Python | Median latency | Tokens / answer |
 |---|---|---|---|---|---|---|---|---|
@@ -84,16 +87,27 @@ every time we tried.
 | Gemini 3.8 Flash | 88.9 | **74.3** | 77.1 | 70.0 | 71.7 | 76.8 | 17.9 s | 1,765 |
 | DeepSeek V4.1 Flash | 89.0 | **71.3** | 68.7 | 71.0 | 71.3 | 74.8 | 12.6 s | 4,040 |
 | Gemini 3.5 Flash* | 91.0 | **66.6** | 67.7 | 66.7 | 67.0 | 64.8 | 7.0 s | 1,805 |
-| **CyberNemo v2, thinking on*** | 86.4 | **63.6** | 67.1 | 58.1 | 60.9 | 66.4 | — | ~1,400 |
-| **CyberNemo v1, fast mode** | 82.8 | **59.3** | 61.3 | 45.2 | 64.3 | 64.0 | ~1.1 s | ~300 |
-| **CyberNemo v2, fast mode** | 81.4 | **57.6** | 58.1 | 49.5 | 59.6 | 62.0 | **1.08 s** | **308** |
-| Nemotron 120B base, thinking on* | 86.4 | 58.4 | 56.8 | 48.6 | 64.3 | 63.2 | 2.4 s | 1,409 |
-| Nemotron 120B base + security prompt* | 80.8 | 57.6 | 58.1 | 47.6 | 54.8 | 68.0 | — | — |
-| Nemotron 120B base, fast mode | 82.5 | 53.2 | 56.8 | 41.4 | 51.7 | 60.0 | 0.85 s | 293 |
-| Nemotron Lightning 30B base | 75.2 | 45.5 | 42.3 | 31.9 | 50.0 | 56.8 | 1.2 s | 287 |
+| **CyberNemo (ours)*** | 86.4 | **63.6** | 67.1 | 58.1 | 60.9 | 66.4 | ~2.4 s† | ~1,400† |
+| Nemotron 120B base* | 86.4 | 58.4 | 56.8 | 48.6 | 64.3 | 63.2 | 2.4 s | 1,409 |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/quality_vs_latency-dark.svg">
+  <img alt="Security versus latency" src="docs/img/quality_vs_latency.svg" width="760">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/per_language-dark.svg">
+  <img alt="Base vs CyberNemo by language" src="docs/img/per_language.svg" width="760">
+</picture>
+
+**Fast mode (thinking off)** is for latency-critical use:
+- CyberNemo answers in **1.08 s with 308 tokens**, at 59.3 works + secure (v1).
+- The base model scores 53.2 in the same mode: **+6.1**, CI +2.3 to +10.1.
+- All rows, including fast mode and the 30B model, are in `results/` (`python scripts/compare.py`).
 
 **Measurement conditions:**
 - Quality: 10 answers per task (1,000 per system); rows marked * use 5.
+- † Not measured on the fine-tune; it equals the base model's thinking mode, which has the same architecture and the same answer length.
 - Latency: the same 30 prompts, 4 concurrent requests, end to end (`scripts/bench_speed.py`; raw data
   in `results/speed/`).
 - Beam and DeepSeek were measured while other W&B jobs were running, so their latency may be inflated.
@@ -103,9 +117,8 @@ every time we tried.
 
 **What this shows:**
 - ✅ Fine-tuning **significantly** raises Nemotron's secure-code rate without breaking functionality.
-- ✅ CyberNemo's fast mode matches the base model's **thinking-mode** security at **1/5 of the tokens**.
-- ✅ It is **12–17× faster** and uses **6–13× fewer tokens** than the frontier models.
-- ❌ The strongest frontier models still write secure code **more often**: 66.6–76.2 vs our 57.6–63.6.
+- ✅ It is **3–7× faster** than the frontier models, and fast mode is **12–17× faster** with 6–13× fewer tokens.
+- ❌ The strongest frontier models still write secure code **more often**: 66.6–76.2 vs our 63.6.
   - The gap is concentrated in CWE-113 header injection, CWE-79 XSS, CWE-918 SSRF, and C/C++
     library misuse (libjwt, OpenSSL).
   - **v3** targets these families with new synthetic tasks. We chose them from the error analysis on
@@ -171,7 +184,7 @@ control-plane account a custom role with `storage.buckets.getIamPolicy`.
 | Path | Contents |
 |---|---|
 | `datagen/` | task generator, sandbox verifier, self-distillation, SFT builder and checker |
-| `scripts/` | CWEval generation and scoring, Fireworks SFT/eval, speed benchmark, `compare.py` |
+| `scripts/` | CWEval generation and scoring, Fireworks SFT/eval, speed benchmark, `compare.py`, `make_charts.py` |
 | `results/` | per-task CWEval summaries and speed data for every system above |
 | `train/`, `cluster/` | earlier W&B and H200 training experiments |
 | `docs/PREP_LOG.md` | full experiment log before the event |
