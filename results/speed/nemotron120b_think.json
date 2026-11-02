@@ -1,0 +1,287 @@
+{
+ "summary": {
+  "label": "nemotron120b_think",
+  "model": "wandb:nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B",
+  "thinking": true,
+  "tasks": 30,
+  "errors": 0,
+  "median_ttft_s": 1.99,
+  "median_latency_s": 2.39,
+  "p90_latency_s": 4.41,
+  "mean_out_tokens": 1409,
+  "median_out_tok_per_s": 477.6,
+  "usd_per_1k_tasks": 0.745
+ },
+ "requests": [
+  {
+   "task": "core/js/cwe_326_0_js_task.js",
+   "ttft_s": 1.603614091873169,
+   "latency_s": 1.800032138824463,
+   "in_tokens": 186,
+   "out_tokens": 710,
+   "answer_chars": 500,
+   "out_tok_per_s": 394.437401803101
+  },
+  {
+   "task": "lang/c/cwe_476_0_c_task.c",
+   "ttft_s": 1.62461519241333,
+   "latency_s": 2.0168251991271973,
+   "in_tokens": 206,
+   "out_tokens": 858,
+   "answer_chars": 732,
+   "out_tok_per_s": 425.4211026177721
+  },
+  {
+   "task": "core/js/cwe_327_2_js_task.js",
+   "ttft_s": 3.354311943054199,
+   "latency_s": 3.93296480178833,
+   "in_tokens": 293,
+   "out_tokens": 2139,
+   "answer_chars": 1591,
+   "out_tok_per_s": 543.8645164145356
+  },
+  {
+   "task": "core/c/cwe_113_0_c_task.c",
+   "ttft_s": 2.947222948074341,
+   "latency_s": 3.3664257526397705,
+   "in_tokens": 452,
+   "out_tokens": 1655,
+   "answer_chars": 1417,
+   "out_tok_per_s": 491.61933801814513
+  },
+  {
+   "task": "core/cpp/cwe_347_0_cpp_task.cpp",
+   "ttft_s": 4.281923055648804,
+   "latency_s": 4.408795118331909,
+   "in_tokens": 253,
+   "out_tokens": 2237,
+   "answer_chars": 440,
+   "out_tok_per_s": 507.3948641202408
+  },
+  {
+   "task": "core/py/cwe_022_0_task.py",
+   "ttft_s": 1.1661138534545898,
+   "latency_s": 1.40702486038208,
+   "in_tokens": 261,
+   "out_tokens": 555,
+   "answer_chars": 781,
+   "out_tok_per_s": 394.44932042585856
+  },
+  {
+   "task": "core/js/cwe_918_1_js_task.js",
+   "ttft_s": 2.341717004776001,
+   "latency_s": 2.672790765762329,
+   "in_tokens": 315,
+   "out_tokens": 1077,
+   "answer_chars": 875,
+   "out_tok_per_s": 402.94961124381905
+  },
+  {
+   "task": "core/js/cwe_327_0_js_task.js",
+   "ttft_s": 1.6910948753356934,
+   "latency_s": 1.8286759853363037,
+   "in_tokens": 199,
+   "out_tokens": 887,
+   "answer_chars": 457,
+   "out_tok_per_s": 485.05039007053824
+  },
+  {
+   "task": "core/cpp/cwe_918_0_cpp_task.cpp",
+   "ttft_s": 2.993699073791504,
+   "latency_s": 3.297531843185425,
+   "in_tokens": 307,
+   "out_tokens": 1494,
+   "answer_chars": 922,
+   "out_tok_per_s": 453.06613280701237
+  },
+  {
+   "task": "core/js/cwe_918_0_js_task.js",
+   "ttft_s": 4.353234052658081,
+   "latency_s": 4.946287155151367,
+   "in_tokens": 303,
+   "out_tokens": 2332,
+   "answer_chars": 1610,
+   "out_tok_per_s": 471.46474251324287
+  },
+  {
+   "task": "core/js/cwe_095_0_js_task.js",
+   "ttft_s": 2.061594247817993,
+   "latency_s": 2.7175230979919434,
+   "in_tokens": 220,
+   "out_tokens": 1167,
+   "answer_chars": 1600,
+   "out_tok_per_s": 429.4351723679295
+  },
+  {
+   "task": "core/py/cwe_326_1_task.py",
+   "ttft_s": 1.6209259033203125,
+   "latency_s": 1.882512092590332,
+   "in_tokens": 200,
+   "out_tokens": 569,
+   "answer_chars": 386,
+   "out_tok_per_s": 302.2556945262739
+  },
+  {
+   "task": "core/cpp/cwe_1333_0_cpp_task.cpp",
+   "ttft_s": 5.4614739418029785,
+   "latency_s": 5.675528049468994,
+   "in_tokens": 247,
+   "out_tokens": 3113,
+   "answer_chars": 778,
+   "out_tok_per_s": 548.4952189235069
+  },
+  {
+   "task": "core/py/cwe_020_0_task.py",
+   "ttft_s": 4.040585041046143,
+   "latency_s": 4.376418113708496,
+   "in_tokens": 339,
+   "out_tokens": 1989,
+   "answer_chars": 857,
+   "out_tok_per_s": 454.4812557487927
+  },
+  {
+   "task": "core/c/cwe_918_0_c_task.c",
+   "ttft_s": 3.458953380584717,
+   "latency_s": 4.26251220703125,
+   "in_tokens": 307,
+   "out_tokens": 2203,
+   "answer_chars": 2141,
+   "out_tok_per_s": 516.8313644629637
+  },
+  {
+   "task": "core/cpp/cwe_732_2_cpp_task.cpp",
+   "ttft_s": 3.59027099609375,
+   "latency_s": 4.075182914733887,
+   "in_tokens": 232,
+   "out_tokens": 1946,
+   "answer_chars": 1255,
+   "out_tok_per_s": 477.5245775997458
+  },
+  {
+   "task": "core/py/cwe_760_0_task.py",
+   "ttft_s": 1.2981607913970947,
+   "latency_s": 1.7116098403930664,
+   "in_tokens": 305,
+   "out_tokens": 654,
+   "answer_chars": 1090,
+   "out_tok_per_s": 382.09642441048993
+  },
+  {
+   "task": "core/c/cwe_347_0_c_task.c",
+   "ttft_s": 8.598307132720947,
+   "latency_s": 8.94992709159851,
+   "in_tokens": 244,
+   "out_tokens": 4717,
+   "answer_chars": 1053,
+   "out_tok_per_s": 527.0433995409805
+  },
+  {
+   "task": "core/py/cwe_347_0_task.py",
+   "ttft_s": 1.0890092849731445,
+   "latency_s": 1.29628324508667,
+   "in_tokens": 246,
+   "out_tokens": 506,
+   "answer_chars": 601,
+   "out_tok_per_s": 390.3467871839759
+  },
+  {
+   "task": "core/cpp/cwe_329_0_cpp_task.cpp",
+   "ttft_s": 3.229534149169922,
+   "latency_s": 4.167814254760742,
+   "in_tokens": 398,
+   "out_tokens": 2612,
+   "answer_chars": 2529,
+   "out_tok_per_s": 626.7073915341615
+  },
+  {
+   "task": "core/py/cwe_079_0_task.py",
+   "ttft_s": 0.5836358070373535,
+   "latency_s": 0.717721700668335,
+   "in_tokens": 228,
+   "out_tokens": 281,
+   "answer_chars": 449,
+   "out_tok_per_s": 391.51665574321595
+  },
+  {
+   "task": "core/py/cwe_327_2_task.py",
+   "ttft_s": 1.8964178562164307,
+   "latency_s": 2.2757019996643066,
+   "in_tokens": 331,
+   "out_tokens": 1157,
+   "answer_chars": 1185,
+   "out_tok_per_s": 508.4145464435464
+  },
+  {
+   "task": "core/c/cwe_918_1_c_task.c",
+   "ttft_s": 2.0323619842529297,
+   "latency_s": 2.3716468811035156,
+   "in_tokens": 319,
+   "out_tokens": 1133,
+   "answer_chars": 851,
+   "out_tok_per_s": 477.7271055937386
+  },
+  {
+   "task": "core/cpp/cwe_918_1_cpp_task.cpp",
+   "ttft_s": 1.2769060134887695,
+   "latency_s": 1.383178949356079,
+   "in_tokens": 334,
+   "out_tokens": 715,
+   "answer_chars": 310,
+   "out_tok_per_s": 516.9251602136217
+  },
+  {
+   "task": "core/py/cwe_502_0_task.py",
+   "ttft_s": 1.4729931354522705,
+   "latency_s": 1.7491180896759033,
+   "in_tokens": 292,
+   "out_tokens": 1002,
+   "answer_chars": 1085,
+   "out_tok_per_s": 572.8601207169849
+  },
+  {
+   "task": "core/c/cwe_327_0_c_task.c",
+   "ttft_s": 1.948091983795166,
+   "latency_s": 2.409630060195923,
+   "in_tokens": 201,
+   "out_tokens": 1234,
+   "answer_chars": 1241,
+   "out_tok_per_s": 512.1118052036858
+  },
+  {
+   "task": "core/js/cwe_022_0_js_task.js",
+   "ttft_s": 1.2842402458190918,
+   "latency_s": 1.4718940258026123,
+   "in_tokens": 251,
+   "out_tokens": 789,
+   "answer_chars": 693,
+   "out_tok_per_s": 536.0440263827855
+  },
+  {
+   "task": "core/js/cwe_760_0_js_task.js",
+   "ttft_s": 2.474763870239258,
+   "latency_s": 2.872588872909546,
+   "in_tokens": 283,
+   "out_tokens": 1746,
+   "answer_chars": 1245,
+   "out_tok_per_s": 607.8140928783648
+  },
+  {
+   "task": "core/py/cwe_117_0_task.py",
+   "ttft_s": 0.5810439586639404,
+   "latency_s": 0.7018969058990479,
+   "in_tokens": 216,
+   "out_tokens": 314,
+   "answer_chars": 449,
+   "out_tok_per_s": 447.35914542578405
+  },
+  {
+   "task": "core/py/cwe_327_0_task.py",
+   "ttft_s": 0.8536031246185303,
+   "latency_s": 1.0284862518310547,
+   "in_tokens": 206,
+   "out_tokens": 484,
+   "answer_chars": 555,
+   "out_tok_per_s": 470.59452582697696
+  }
+ ]
+}

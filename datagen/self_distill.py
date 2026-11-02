@@ -233,6 +233,7 @@ if __name__ == "__main__":
     ap.add_argument("--thinking", action="store_true")       # sample with reasoning on; train on the final answer only
     ap.add_argument("--max_tokens", type=int, default=4096)
     ap.add_argument("--langs", default="")                   # e.g. c,cpp: only these languages
+    ap.add_argument("--only", default="")                    # comma-separated task-id substrings, e.g. _901_,_902_
     ap.add_argument("--out", default="")
     a = ap.parse_args()
     sfx = f"_{a.tag}" if a.tag else ""
@@ -241,6 +242,8 @@ if __name__ == "__main__":
     tasks = load_tasks()
     if a.langs:
         tasks = [t for t in tasks if t["lang"] in a.langs.split(",")]
+    if a.only:
+        tasks = [t for t in tasks if any(x in t["id"] for x in a.only.split(","))]
     if a.limit:
         tasks = random.Random(1).sample(tasks, a.limit)
     print(f"{len(tasks)} tasks: {dict(Counter(t['lang'] for t in tasks))}", flush=True)

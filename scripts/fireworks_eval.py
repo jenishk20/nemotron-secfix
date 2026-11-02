@@ -37,6 +37,8 @@ def main():
     ap.add_argument("--n", type=int, default=10)
     ap.add_argument("--concurrency", type=int, default=64)
     ap.add_argument("--max_minutes", type=float, default=7)  # hard cap on billed time after READY
+    ap.add_argument("--thinking_n", type=int, default=0)     # also run <run>_thinkon with reasoning on (n answers/task)
+    ap.add_argument("--bench", action="store_true")          # also run the speed benchmark (30 prompts, 4 concurrent)
     ap.add_argument("--wait_minutes", type=float, default=40)
     a = ap.parse_args()
     t0, dep = time.time(), None
@@ -54,11 +56,23 @@ def main():
         target = f"{a.model}#{dep['name']}"  # a LoRA on a dedicated deployment is addressed as model#deployment
         cmd = [sys.executable, os.path.join(ROOT, "scripts", "fast_gen.py"), a.run, f"fireworks:{target}",
                "--n", str(a.n), "--concurrency", str(a.concurrency)]
-        p = subprocess.Popen(cmd)
-        while p.poll() is None:
+        steps = [cmd]
+        if a.bench:
+            steps.append([sys.executable, os.path.join(ROOT, "scripts", "bench_speed.py"), f"{a.run}_speed",
+                          f"fireworks:{target}"])
+        if a.thinking_n:
+            steps.append([sys.executable, os.path.join(ROOT, "scripts", "fast_gen.py"), f"{a.run}_thinkon",
+                          f"fireworks:{target}", "--n", str(a.thinking_n), "--concurrency", str(a.concurrency),
+                          "--default_mode", "--max_tokens", "16384"])
+        for step in steps:  # in priority order; the cap stops whatever is still running
+            log("running", os.path.basename(step[1]), step[2])
+            p = subprocess.Popen(step)
+            while p.poll() is None:
+                if time.time() - ready > a.max_minutes * 60:
+                    log(f"hit the {a.max_minutes} min cap; stopping"); p.kill(); break
+                time.sleep(5)
             if time.time() - ready > a.max_minutes * 60:
-                log(f"hit the {a.max_minutes} min cap; stopping generation"); p.kill(); break
-            time.sleep(5)
+                break
     finally:
         # a deployment used in the past hour can only be deleted with ignoreChecks (plain DELETE returns 400)
         call("DELETE", f"deployments/{dep_name}?ignoreChecks=true")

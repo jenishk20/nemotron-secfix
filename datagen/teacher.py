@@ -202,10 +202,10 @@ def repair_jobs(src):
 
 
 def main(n=20, out="data/synth/py_pilot.jsonl", threads=16, seed=0, temperature=0.8, max_tokens=24000, repair=None,
-         lang="py"):
+         lang="py", cwes=""):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     rng = random.Random(seed)
-    cwes = sorted(CWES[lang])
+    cwes = sorted(int(c) for c in cwes.split(",")) if cwes else sorted(CWES[lang])  # --cwes: only these
     # Balanced over CWEs, random domain and variation seed per job
     jobs = [{"id": f"{lang}_{seed}_{i:05d}", "lang": lang, "cwe": cwes[i % len(cwes)],
              "domain": rng.choice(DOMAINS), "seed": rng.randrange(10**6)} for i in range(n)]
@@ -269,4 +269,5 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--repair", help="candidates .jsonl (already verified) whose failures to send back for a fix")
     ap.add_argument("--lang", default="py", choices=["py", "c", "cpp", "js"])
+    ap.add_argument("--cwes", default="", help="comma-separated CWE ids to generate (default: all for the language)")
     main(**vars(ap.parse_args()))

@@ -3,7 +3,8 @@
 Streams each answer and records time to first token, total latency, output tokens and output
 tokens/s, plus the price per task from the given $/1M token prices. Runs a fixed, seeded subset of
 the 100 non-Go CWEval tasks with modest concurrency so latency reflects one user, not a batch.
-Model forms (same as scripts/gen.sh): wandb:<id>, vertex_ai/<id>, fireworks:<model or deployment>.
+Model forms (same as scripts/gen.sh): wandb:<id>, vertex_ai/<id>, fireworks:<model or deployment>,
+default:wandb:<id> (a baseline in its own default reasoning mode).
 Usage: .venv/bin/python scripts/bench_speed.py <label> <model> [--thinking] [--n 30]
          [--price_in 0.15 --price_out 0.50]   -> outputs/speed/<label>.json
 """
@@ -44,6 +45,9 @@ def route(model, thinking):
         kw = dict(model="openai/" + model[10:], api_base="https://api.fireworks.ai/inference/v1",
                   api_key=os.environ["FIREWORKS_API_KEY"],
                   extra_body={"chat_template_kwargs": {"enable_thinking": thinking}})
+    elif model.startswith("default:wandb:"):  # a frontier baseline in its own default mode (no thinking switch)
+        kw = dict(model="openai/" + model[14:], api_base="https://api.inference.wandb.ai/v1",
+                  api_key=os.environ["WANDB_API_KEY"])
     elif model.startswith("vertex_ai/"):
         adc = tempfile.NamedTemporaryFile("wb", suffix=".json", delete=False)
         adc.write(base64.b64decode(os.environ["GOOGLE_ADC_B64"])); adc.close()
