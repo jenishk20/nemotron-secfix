@@ -1,8 +1,23 @@
-# CyberNemo: secure-by-default code generation with NVIDIA Nemotron on Fireworks
+# CyberNemo: making open LLMs secure by default
 
-AI coding assistants often write code that **works but can be hacked**. CyberNemo is NVIDIA Nemotron
-3.5 Super 120B, fine-tuned on Fireworks so that it writes the **secure** version of a function by
-default, with no security prompt.
+**Mission:** the next generation of coding models should be **smart *and* safe by default**. The code
+they write ends up running inside enterprise infrastructure, so every vulnerability they write is an
+opening for an attacker.
+
+**The problem, measured.** We ran every model on CWEval's executable attack tests:
+- Base **Nemotron 120B** writes broken or exploitable code in **42%** of its answers.
+- Even the best frontier model we tested, Reflection Beam, does so in **24%**.
+
+Typical failures:
+- **Path traversal:** `../../etc/passwd` reads files outside the intended folder.
+- **Header injection:** user text containing `\r\n` becomes a forged HTTP header.
+- **XSS:** user text is written into HTML without escaping.
+- **Buffer overflows** in C.
+
+**What CyberNemo does.** It is NVIDIA Nemotron 3.5 Super 120B, fine-tuned on Fireworks to write the
+**secure** version of the code **by default**, with no security prompt and no human reviewer in the
+loop. Enterprises that must run open models on their own infrastructure get an assistant that
+protects that infrastructure instead of exposing it.
 
 | CWEval, 100 tasks (thinking mode) | Nemotron 120B base | **CyberNemo** | Change (95% CI) |
 |---|---|---|---|
@@ -33,6 +48,13 @@ const dir = path.resolve(dir_path), file = path.resolve(dir, filename);
 if (!file.startsWith(dir + path.sep)) return '';
 return fs.readFileSync(file, 'utf8');
 ```
+
+**Why prevention, not just detection:**
+- Scanners and code review catch vulnerabilities **after** they are written, and only if someone
+  triages the findings.
+- As AI writes a growing share of enterprise code, the cheapest fix is a model that **doesn't write the
+  vulnerability in the first place**.
+- It complements scanners rather than replacing them.
 
 **Who it's for:**
 - teams that **must self-host** models (finance, health, government, enterprise IP);
