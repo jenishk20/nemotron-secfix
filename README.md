@@ -8,9 +8,6 @@ attacker.
 - base **Nemotron 120B** writes broken or exploitable code in **42%** of answers;
 - even the best frontier model we tested, Reflection Beam, does so in **24%**.
 
-Typical failures: path traversal (`../../etc/passwd`), header injection (`\r\n`), XSS, and C buffer
-overflows.
-
 **CyberNemo** is NVIDIA Nemotron 3.5 Super 120B, **fine-tuned on Fireworks** to write secure code
 by default, plus a **security-review harness**. It runs on your own infrastructure.
 
