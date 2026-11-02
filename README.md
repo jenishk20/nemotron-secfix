@@ -107,7 +107,7 @@ All systems reason before answering (thinking or default mode).
 
 **Measurement conditions:**
 - Quality: 10 answers per task (1,000 per system); rows marked * use 5.
-- † Not measured on the fine-tune; it equals the base model's thinking mode, which has the same architecture and the same answer length.
+- † Estimated from the base model's thinking mode (same architecture). It will be measured directly on the fine-tune in the v3 eval.
 - Latency: the same 30 prompts, 4 concurrent requests, end to end (`scripts/bench_speed.py`; raw data
   in `results/speed/`).
 - Beam and DeepSeek were measured while other W&B jobs were running, so their latency may be inflated.

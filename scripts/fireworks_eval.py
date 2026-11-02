@@ -60,6 +60,9 @@ def main():
         if a.bench:
             steps.append([sys.executable, os.path.join(ROOT, "scripts", "bench_speed.py"), f"{a.run}_speed",
                           f"fireworks:{target}"])
+            if a.thinking_n:
+                steps.append([sys.executable, os.path.join(ROOT, "scripts", "bench_speed.py"), f"{a.run}_thinkon_speed",
+                              f"fireworks:{target}", "--thinking"])
         if a.thinking_n:
             steps.append([sys.executable, os.path.join(ROOT, "scripts", "fast_gen.py"), f"{a.run}_thinkon",
                           f"fireworks:{target}", "--n", str(a.thinking_n), "--concurrency", str(a.concurrency),
