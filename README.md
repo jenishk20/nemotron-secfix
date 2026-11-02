@@ -22,46 +22,47 @@ by default, plus a **security-review harness**. It runs on your own infrastructu
 | CWEval, 100 held-out tasks (thinking mode) | Works + secure | Works | Change vs base (95% CI) |
 |---|---|---|---|
 | Nemotron 120B base | 58.4 | 86.4 | — |
-| **CyberNemo** (fine-tune) | **63.3** | 86.2 | **+4.9** (+0.6 to +9.4), works unchanged |
-| **CyberNemo + security review** | **72.4** | 81.1 | **+14.0** (+5.2 to +23.1), works −5.3 |
-| *Frontier, default mode:* Beam / Gemini 3.8 Flash / DeepSeek V4.1 Flash / Gemini 3.5 Flash | 76.2 / 74.3 / 71.3 / 66.6 | 87–91 | CyberNemo + review is **statistically on par** with all four (every CI includes 0) |
+| **CyberNemo** (SFT fine-tune) | **63.3** | 86.2 | **+4.9** (+0.6 to +9.4), works unchanged |
+| **CyberNemo** (SFT + review harness) | **72.4** | 81.1 | **+14.0** (+5.2 to +23.1), works −5.3 |
+| *Frontier, default mode:* Beam / Gemini 3.8 Flash / DeepSeek V4.1 Flash / Gemini 3.5 Flash / MiniMax M3.1 Flash | 76.2 / 74.3 / 71.3 / 66.6 / 62.0 | 82–91 | SFT + harness is **statistically on par** with the top four (every CI includes 0) |
 
 ---
 
-## Method
+## Method: two parts
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/method-dark.svg">
-  <img alt="Pipeline: synthetic tasks, self-distillation, Fireworks LoRA SFT, security-review harness" src="docs/img/method.svg" width="900">
+  <img alt="Part 1: SFT fine-tune. Part 2: security-review harness" src="docs/img/method.svg" width="820">
 </picture>
 
-1. **Synthetic tasks with attack tests** (`datagen/teacher.py`, `datagen/verify_in_container.py`).
-   - Nemotron 3 Ultra writes, per task: a spec, a secure solution, a vulnerable solution, and
-     functionality + security tests.
-   - A task is kept only if, in an offline sandbox, the secure solution passes everything and the
-     vulnerable one is **caught**.
-   - 1,813 tasks; 96 CWE × language combinations across C, C++, JS and Python.
-   - A leakage filter removes anything resembling a CWEval task.
-2. **Self-distillation** (`datagen/self_distill.py`).
-   - Nemotron 120B solves each task with reasoning and a security hint.
-   - Only answers passing **all** of the task's tests in W&B Sandboxes are kept.
-   - Training pair: **plain prompt → the model's own verified code**.
-3. **LoRA SFT on Fireworks** (`scripts/fireworks_sft.py`): rank 16, 1 epoch, about 1,000–1,400 rows,
-   about $8–11 per run.
-4. **Security-review harness** (`scripts/review_pass.py`), at inference time.
-   - CyberNemo reviews its own code against a generic OWASP/CWE checklist and returns the fixed code.
-   - **It never sees the benchmark's tests.**
-   - Example: it adds the missing CR/LF check to a header-injection task, which goes from 0 to 9 of
-     10 secure.
+### Part 1: SFT fine-tune (changes the model) → **+4.9** works + secure
+1. **Practice tasks.**
+   - Nemotron 3 Ultra 550B writes 1,813 synthetic coding tasks: a spec, secure and vulnerable reference
+     code, and functionality + attack tests.
+   - A task is kept only if its attack tests catch the vulnerable version, checked in an offline
+     sandbox.
+2. **Self-distillation.**
+   - Nemotron 120B solves each task with reasoning.
+   - Only its answers that pass **every** test are kept (W&B Sandboxes), with the reasoning removed.
+3. **LoRA SFT on Fireworks** (rank 16, 1 epoch): the plain prompt → the model's own verified code.
+   This produces **CyberNemo**.
 
-**What contributed (ablations, same 100 tasks):**
+### Part 2: security-review harness (wraps the model at answer time) → **+8.9** works + secure
+1. CyberNemo writes the code.
+2. The same model reviews it against a generic security checklist: escape HTML, reject CR/LF in
+   headers, check paths and URLs, parameterize queries, bounds-check C buffers, and so on.
+3. It returns the fixed code (`scripts/review_pass.py`). The harness **never sees the benchmark's tests**.
 
-| Choice | Effect on works + secure |
-|---|---|
-| Fine-tune on the model's **own** verified answers | +4.9 thinking / **+6.1** fast mode (significant), functionality unchanged |
-| Security-review harness on top | **+8.9** (+1.7 to +16.3), functionality −4.7 |
-| Training on **other** models' answers (550B teacher; the 120B's answers for a 30B model) | **worse** every time (−3 to −14 functionality) |
-| Security hint in the prompt only (no training) | +4.4 fast mode |
+**Example (header injection).** The harness adds the missing check, and the task goes from 0/10 to
+9/10 secure:
+```python
+if '\r' in info_content or '\n' in info_content:   # reject CR/LF: prevents a forged HTTP header
+    return header
+```
+
+Full data provenance (who produced each part of every dataset) is in [`docs/DATA.md`](docs/DATA.md).
+In short: **Ultra writes the tasks, the 120B writes every training answer, and no frontier-model outputs
+are used.**
 
 ## Evaluation protocol
 - **Benchmark:** [CWEval](https://arise-lab.github.io/cweval-bench/) (Columbia, LLM4Code @ ICSE 2025),
@@ -91,10 +92,11 @@ by default, plus a **security-review harness**. It runs on your own infrastructu
 |---|---|---|---|---|---|---|---|---|
 | Reflection Beam 1.0 (501B) | 86.9 | **76.2** | 74.2 | 73.8 | 79.1 | 78.0 | 16.3 s | 2,864 |
 | Gemini 3.8 Flash | 88.9 | **74.3** | 77.1 | 70.0 | 71.7 | 76.8 | 17.9 s | 1,765 |
-| **CyberNemo + review (ours)** | 81.1 | **72.4** | 75.5 | 73.9 | 67.0 | 72.2 | ~12 s (2 calls) | ~3,800 |
+| **CyberNemo SFT + harness (ours)** | 81.1 | **72.4** | 75.5 | 73.9 | 67.0 | 72.2 | ~12 s (2 calls) | ~3,800 |
 | DeepSeek V4.1 Flash | 89.0 | **71.3** | 68.7 | 71.0 | 71.3 | 74.8 | 12.6 s | 4,040 |
 | Gemini 3.5 Flash* | 91.0 | **66.6** | 67.7 | 66.7 | 67.0 | 64.8 | 7.0 s | 1,805 |
-| **CyberNemo (ours)** | 86.2 | **63.3** | 68.1 | 56.7 | 60.0 | 66.0 | 6.2 s | 1,883 |
+| MiniMax M3.1 Flash* | 82.4 | **62.0** | 61.3 | 55.2 | 62.6 | 68.0 | — | — |
+| **CyberNemo SFT (ours)** | 86.2 | **63.3** | 68.1 | 56.7 | 60.0 | 66.0 | 6.2 s | 1,883 |
 | Nemotron 120B base* | 86.4 | 58.4 | 56.8 | 48.6 | 64.3 | 63.2 | 2.4 s | 1,409 |
 
 \* 5 answers per task. Everything else uses 10.

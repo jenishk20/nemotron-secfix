@@ -81,7 +81,7 @@ async def gen(a, tasks):
                     r = await client.chat.completions.create(
                         model=a.model, messages=[{"role": "user", "content": prompt(t, SecurePrompt)}],
                         temperature=0.8, max_tokens=a.max_tokens,
-                        extra_body={"chat_template_kwargs": {"enable_thinking": a.thinking}})
+                        **({} if a.default_mode else {"extra_body": {"chat_template_kwargs": {"enable_thinking": a.thinking}}}))
                 break
             except Exception as e:
                 status = getattr(e, "status_code", None)
@@ -234,6 +234,8 @@ if __name__ == "__main__":
     ap.add_argument("--max_tokens", type=int, default=4096)
     ap.add_argument("--langs", default="")                   # e.g. c,cpp: only these languages
     ap.add_argument("--only", default="")                    # comma-separated task-id substrings, e.g. _901_,_902_
+    ap.add_argument("--ids_file", default="")                # file with one task id per line: only these tasks
+    ap.add_argument("--default_mode", action="store_true")   # teacher models that always reason (no thinking switch)
     ap.add_argument("--out", default="")
     a = ap.parse_args()
     sfx = f"_{a.tag}" if a.tag else ""
@@ -244,6 +246,9 @@ if __name__ == "__main__":
         tasks = [t for t in tasks if t["lang"] in a.langs.split(",")]
     if a.only:
         tasks = [t for t in tasks if any(x in t["id"] for x in a.only.split(","))]
+    if a.ids_file:
+        keep = {l.strip() for l in open(a.ids_file) if l.strip()}
+        tasks = [t for t in tasks if t["id"] in keep]
     if a.limit:
         tasks = random.Random(1).sample(tasks, a.limit)
     print(f"{len(tasks)} tasks: {dict(Counter(t['lang'] for t in tasks))}", flush=True)

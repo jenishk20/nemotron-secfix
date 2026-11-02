@@ -16,6 +16,7 @@ RUNS = [  # (label, run, how it was produced)
     ("Reflection Beam 1.0 501B", "beam_n10", "W&B Inference, default mode"),
     ("DeepSeek V4.1 Flash", "dsv41flash_n10", "W&B Inference, default mode"),
     ("Gemini 3.5 Flash", "gemini35flash_all_n5", "Vertex AI, default mode"),
+    ("MiniMax M3.1 Flash", "minimax31flash_n5", "Fireworks serverless, default mode"),
     ("Nemotron 3.5 Super 120B, base (thinking off)", "super120_nothink_n10", "W&B Inference"),
     ("Nemotron 3.5 Super 120B, base + security prompt", "super120_nothink_secure_n5", "W&B Inference"),
     ("Nemotron 3.5 Super 120B, base (thinking on)", "base_wandb_all_n5", "W&B Inference"),

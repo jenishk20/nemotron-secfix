@@ -23,10 +23,11 @@ BASE, SFT, REVIEW = "base_wandb_all_n5", "sft120_think_v2_n10_thinkon", "sft120_
 SYSTEMS = [
     ("Reflection Beam 1.0", "beam_n10", "other", "beam_speed", ""),
     ("Gemini 3.8 Flash", "gemini38flash_n10", "other", "gemini38flash_speed", ""),
-    ("CyberNemo + review (ours)", REVIEW, "review", "sft120_think_v2_n10_thinkon_speed", "x2"),  # two thinking calls
+    ("CyberNemo SFT + harness (ours)", REVIEW, "review", "sft120_think_v2_n10_thinkon_speed", "x2"),  # two thinking calls
     ("DeepSeek V4.1 Flash", "dsv41flash_n10", "other", "dsv41flash_speed", ""),
     ("Gemini 3.5 Flash", "gemini35flash_all_n5", "other", "gemini35flash", ""),
-    ("CyberNemo (ours)", SFT, "ours", "sft120_think_v2_n10_thinkon_speed", ""),
+    ("CyberNemo SFT (ours)", SFT, "ours", "sft120_think_v2_n10_thinkon_speed", ""),
+    ("MiniMax M3.1 Flash", "minimax31flash_n5", "other", None, ""),
     ("Nemotron 120B base", BASE, "base", "nemotron120b_think", ""),
 ]
 
@@ -69,31 +70,39 @@ def title(t, text, sub=None):
 
 
 def method(t):
-    W, H = 900, 300
-    steps = [  # (x, title, lines, role)
-        (20, "1. Synthetic tasks", ["1,813 coding tasks, 4 languages", "spec + secure &amp; vulnerable refs", "+ functionality &amp; attack tests", "verified in an offline sandbox"], "other"),
-        (240, "2. Self-distillation", ["Nemotron 120B solves each task", "with reasoning + security hint", "keep only answers passing ALL", "tests (W&amp;B Sandboxes)"], "other"),
-        (460, "3. LoRA SFT on Fireworks", ["plain prompt &#8594; own verified code", "rank 16, 1 epoch, ~$10", "&#8658; CyberNemo: secure by", "default, no hint needed"], "ours"),
-        (680, "4. Security-review harness", ["CyberNemo reviews its own code", "against an OWASP/CWE checklist", "and returns the fixed version", "(never sees benchmark tests)"], "review"),
+    W, H = 820, 360
+    b = [title(t, "How CyberNemo works: two parts", "Part 1 changes the model (training). Part 2 wraps it at answer time (harness).")]
+    panels = [
+        (20, "ours", "1  SFT fine-tune", "teaches secure habits  (+4.9 works+secure)",
+         ["Practice tasks: 1,813 coding tasks with attack tests", "(written by Nemotron 3 Ultra, verified in a sandbox)",
+          "Self-distillation: Nemotron 120B solves them;", "keep only its answers that pass every test",
+          "LoRA SFT on Fireworks  &#8594;  CyberNemo"]),
+        (420, "review", "2  Security-review harness", "catches what is left  (+8.9 works+secure)",
+         ["CyberNemo writes the code", "",
+          "Same model reviews it against a security checklist", "(escape HTML, reject CR/LF, check paths and URLs, ...)",
+          "Returns the fixed code; never sees benchmark tests"]),
     ]
-    b = [title(t, "How CyberNemo is built", "Steps 1-2 build training data; 3 trains the model; 4 runs at inference time")]
-    for x, head, lines, role in steps:
-        b.append(f"<rect x='{x}' y='70' width='200' height='150' rx='10' fill='{t['box']}' stroke='{t[role] if role != 'other' else t['grid']}' stroke-width='2'/>"
-                 f"<text x='{x + 12}' y='96' font-size='13' font-weight='600' fill='{t['ink']}'>{head}</text>")
-        for i, line in enumerate(lines):
-            b.append(f"<text x='{x + 12}' y='{122 + i * 22}' font-size='11.5' fill='{t['ink2']}'>{line}</text>")
-        if x < 680:
-            b.append(f"<path d='M{x + 204},145 H{x + 234}' stroke='{t['muted']}' stroke-width='2'/>"
-                     f"<path d='M{x + 228},139 L{x + 236},145 L{x + 228},151' fill='none' stroke='{t['muted']}' stroke-width='2'/>")
-    b.append(f"<rect x='20' y='240' width='860' height='40' rx='10' fill='{t['box']}' stroke='{t['grid']}'/>"
-             f"<text x='36' y='265' font-size='12' fill='{t['ink2']}'><tspan font-weight='600' fill='{t['ink']}'>Evaluation:</tspan> "
-             f"CWEval, 100 held-out human-written tasks; every answer run against functionality + attack tests, "
-             f"offline; paired bootstrap CIs</text>")
-    return svg(W, H, "".join(b), t, "CyberNemo pipeline")
+    for x, role, head, sub, lines in panels:
+        b.append(f"<rect x='{x}' y='64' width='380' height='230' rx='12' fill='{t['box']}' stroke='{t[role]}' stroke-width='2'/>"
+                 f"<text x='{x + 18}' y='94' font-size='15' font-weight='700' fill='{t['ink']}'>{head}</text>"
+                 f"<text x='{x + 18}' y='114' font-size='12' fill='{t['ink2']}'>{sub}</text>")
+        for i, pair in enumerate((lines[0:2], lines[2:4], lines[4:5])):
+            y = 136 + i * 52
+            b.append(f"<rect x='{x + 18}' y='{y}' width='344' height='{44 if len(pair) == 2 else 30}' rx='8' fill='{t['bg']}' stroke='{t['grid']}'/>")
+            for j, line in enumerate(pair):
+                if line:
+                    b.append(f"<text x='{x + 30}' y='{y + 18 + j * 17}' font-size='12' fill='{t['ink'] if j == 0 else t['ink2']}'>{line}</text>")
+            if i < 2:
+                b.append(f"<path d='M{x + 190},{y + 44} V{y + 52}' stroke='{t['muted']}' stroke-width='2'/>")
+    b.append(f"<path d='M403,180 H415' stroke='{t['muted']}' stroke-width='2'/><path d='M409,174 L417,180 L409,186' fill='none' stroke='{t['muted']}' stroke-width='2'/>")
+    b.append(f"<rect x='20' y='308' width='780' height='36' rx='10' fill='{t['box']}' stroke='{t['grid']}'/>"
+             f"<text x='36' y='331' font-size='12' fill='{t['ink2']}'><tspan font-weight='600' fill='{t['ink']}'>Evaluation:</tspan> "
+             f"CWEval: 100 held-out human-written tasks, functionality + attack tests, run offline</text>")
+    return svg(W, H, "".join(b), t, "CyberNemo: SFT fine-tune + security-review harness")
 
 
 def before_after(t):
-    stages = [("Nemotron 120B base", BASE, "base"), ("+ fine-tune (CyberNemo)", SFT, "ours"), ("+ security review", REVIEW, "review")]
+    stages = [("Nemotron 120B base", BASE, "base"), ("+ SFT fine-tune", SFT, "ours"), ("+ review harness", REVIEW, "review")]
     refs = [("Reflection Beam", "beam_n10"), ("Gemini 3.8 Flash", "gemini38flash_n10"), ("DeepSeek V4.1 Flash", "dsv41flash_n10"), ("Gemini 3.5 Flash", "gemini35flash_all_n5")]
     W, H, L, T, B = 820, 380, 56, 70, 74
     sy = lambda v: T + (H - T - B) * (1 - (v - 40) / 50)
@@ -120,7 +129,7 @@ def before_after(t):
 
 def secure_rate(t):
     rows = sorted(((lbl, rate(run), role) for lbl, run, role, _, _ in SYSTEMS), key=lambda r: -r[1])
-    W, L, top, bh, gap = 760, 210, 54, 22, 12
+    W, L, top, bh, gap = 780, 240, 54, 22, 12
     H = top + len(rows) * (bh + gap) + 34
     sx = lambda v: L + (W - L - 70) * v / 100
     b = [title(t, "Working and secure code, CWEval (% of answers)")]
@@ -140,6 +149,8 @@ def secure_rate(t):
 def quality_vs_latency(t):
     pts = []
     for lbl, run, role, sp, note in SYSTEMS:
+        if sp is None:
+            continue
         s = latency(sp) * (2 if note == "x2" else 1)
         pts.append((lbl + (" (2 calls, est.)" if note == "x2" else ""), s, rate(run), role, False))
     pts += [("CyberNemo, fast mode", latency("sft120_think_v2_n10_speed_run2"), rate("sft120_think_v1_n10"), "ours", True),
@@ -156,7 +167,7 @@ def quality_vs_latency(t):
         b.append(f"<text x='{sx(s)}' y='{H - B + 18}' font-size='11' fill='{t['muted']}' text-anchor='middle'>{s:g} s</text>")
     b.append(f"<text x='{(L + W - R) / 2}' y='{H - 12}' font-size='12' fill='{t['ink2']}' text-anchor='middle'>median latency per answer (log scale)</text>"
              f"<text x='16' y='{(T + H - B) / 2}' font-size='12' fill='{t['ink2']}' text-anchor='middle' transform='rotate(-90 16 {(T + H - B) / 2})'>works + secure (%)</text>")
-    nudge = {"CyberNemo + review (ours) (2 calls, est.)": 3, "DeepSeek V4.1 Flash": 17,
+    nudge = {"CyberNemo SFT + harness (ours) (2 calls, est.)": 3, "DeepSeek V4.1 Flash": 17,
              "CyberNemo, fast mode": -12, "Nemotron 120B base": 12}
     for lbl, s, v, role, hollow in pts:
         x, y = sx(s), sy(v)
@@ -168,7 +179,7 @@ def quality_vs_latency(t):
 
 def per_language(t):
     langs = [("C", "c"), ("C++", "cpp"), ("JavaScript", "js"), ("Python", "py")]
-    series = [("Nemotron 120B base", BASE, "base"), ("CyberNemo", SFT, "ours"), ("CyberNemo + review", REVIEW, "review")]
+    series = [("Nemotron 120B base", BASE, "base"), ("+ SFT fine-tune", SFT, "ours"), ("+ review harness", REVIEW, "review")]
     W, H, L, T, B = 760, 340, 50, 76, 40
     gw, bw = (W - L - 30) / len(langs), 34
     sy = lambda v: T + (H - T - B) * (1 - v / 100)
