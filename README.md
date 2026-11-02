@@ -5,7 +5,7 @@ AI coding assistants often write code that **works but can be hacked**. CyberNem
 default. It answers in about **1 second with about 300 tokens**; frontier models reason for 12–18 s
 and 1,800–4,000 tokens to get there.
 
-| CWEval (100 tasks × 10 answers) | Nemotron 120B base | **CyberNemo** | Change (95% CI) |
+| CWEval, 100 tasks | Nemotron 120B base | **CyberNemo** | Change (95% CI) |
 |---|---|---|---|
 | Works + secure (fast mode) | 53.2 | **59.3** | **+6.1** (+2.3 to +10.1) |
 | Works + secure (thinking mode) | 58.4 | **63.6** | +10.4 vs fast base (+5.9 to +15.0) |
@@ -78,21 +78,22 @@ every time we tried.
 
 ## Results
 
-| System | Answers/task | Works | **Works+secure** | C | C++ | JS | Python | Median latency | Tokens/answer |
-|---|---|---|---|---|---|---|---|---|---|
-| Reflection Beam 1.0 (501B) | 10 | 86.9 | **76.2** | 74.2 | 73.8 | 79.1 | 78.0 | 16.3 s | 2,864 |
-| Gemini 3.8 Flash | 10 | 88.9 | **74.3** | 77.1 | 70.0 | 71.7 | 76.8 | 17.9 s | 1,765 |
-| DeepSeek V4.1 Flash | 10 | 89.0 | **71.3** | 68.7 | 71.0 | 71.3 | 74.8 | 12.6 s | 4,040 |
-| Gemini 3.5 Flash | 5 | 91.0 | **66.6** | 67.7 | 66.7 | 67.0 | 64.8 | 7.0 s | 1,805 |
-| **CyberNemo v2, thinking on** | 5 | 86.4 | **63.6** | 67.1 | 58.1 | 60.9 | 66.4 | — | ~1,400 |
-| **CyberNemo v1, fast mode** | 10 | 82.8 | **59.3** | 61.3 | 45.2 | 64.3 | 64.0 | ~1.1 s | ~300 |
-| **CyberNemo v2, fast mode** | 10 | 81.4 | **57.6** | 58.1 | 49.5 | 59.6 | 62.0 | **1.08 s** | **308** |
-| Nemotron 120B base, thinking on | 5 | 86.4 | 58.4 | 56.8 | 48.6 | 64.3 | 63.2 | 2.4 s | 1,409 |
-| Nemotron 120B base + security prompt | 5 | 80.8 | 57.6 | 58.1 | 47.6 | 54.8 | 68.0 | — | — |
-| Nemotron 120B base, fast mode | 10 | 82.5 | 53.2 | 56.8 | 41.4 | 51.7 | 60.0 | 0.85 s | 293 |
-| Nemotron Lightning 30B base | 10 | 75.2 | 45.5 | 42.3 | 31.9 | 50.0 | 56.8 | 1.2 s | 287 |
+| System | Works | **Works + secure** | C | C++ | JS | Python | Median latency | Tokens / answer |
+|---|---|---|---|---|---|---|---|---|
+| Reflection Beam 1.0 (501B) | 86.9 | **76.2** | 74.2 | 73.8 | 79.1 | 78.0 | 16.3 s | 2,864 |
+| Gemini 3.8 Flash | 88.9 | **74.3** | 77.1 | 70.0 | 71.7 | 76.8 | 17.9 s | 1,765 |
+| DeepSeek V4.1 Flash | 89.0 | **71.3** | 68.7 | 71.0 | 71.3 | 74.8 | 12.6 s | 4,040 |
+| Gemini 3.5 Flash* | 91.0 | **66.6** | 67.7 | 66.7 | 67.0 | 64.8 | 7.0 s | 1,805 |
+| **CyberNemo v2, thinking on*** | 86.4 | **63.6** | 67.1 | 58.1 | 60.9 | 66.4 | — | ~1,400 |
+| **CyberNemo v1, fast mode** | 82.8 | **59.3** | 61.3 | 45.2 | 64.3 | 64.0 | ~1.1 s | ~300 |
+| **CyberNemo v2, fast mode** | 81.4 | **57.6** | 58.1 | 49.5 | 59.6 | 62.0 | **1.08 s** | **308** |
+| Nemotron 120B base, thinking on* | 86.4 | 58.4 | 56.8 | 48.6 | 64.3 | 63.2 | 2.4 s | 1,409 |
+| Nemotron 120B base + security prompt* | 80.8 | 57.6 | 58.1 | 47.6 | 54.8 | 68.0 | — | — |
+| Nemotron 120B base, fast mode | 82.5 | 53.2 | 56.8 | 41.4 | 51.7 | 60.0 | 0.85 s | 293 |
+| Nemotron Lightning 30B base | 75.2 | 45.5 | 42.3 | 31.9 | 50.0 | 56.8 | 1.2 s | 287 |
 
 **Measurement conditions:**
+- Quality: 10 answers per task (1,000 per system); rows marked * use 5.
 - Latency: the same 30 prompts, 4 concurrent requests, end to end (`scripts/bench_speed.py`; raw data
   in `results/speed/`).
 - Beam and DeepSeek were measured while other W&B jobs were running, so their latency may be inflated.
