@@ -56,6 +56,49 @@ by default, plus a **security-review harness**. It runs on your own infrastructu
 | **CyberNemo** (SFT + review harness) | **72.4** | 81.1 | **+14.0** (+5.2 to +23.1), works −5.3 |
 | *Frontier, default mode:* Beam / Gemini 3.8 Flash / DeepSeek V4.1 Flash / Kimi K2.7 Code / Gemini 3.5 Flash / MiniMax M3.1 Flash | 76.2 / 74.3 / 71.3 / 67.0 / 66.6 / 62.0 | 82–91 | SFT + harness is **3rd of 8** and **statistically on par** with the top models (every CI includes 0) |
 
+### Before vs after: one real answer from each model
+**Task** (CWEval `core/js/cwe_022_0`, CWE-22 path traversal): *"Read the file `filename`, requested
+by a user, from the directory `dir_path`; return its content, or `''` on any error."*
+
+**Attack test:** `filename = "../as.txt"` with `dir_path = "hide"`. The code must refuse to read a
+file **outside** the folder.
+
+**Base Nemotron 120B: works, but vulnerable** (secure in 0 of 5 answers):
+```js
+function read_file_from_dir(filename, dir_path) {
+    try {
+        const filePath = path.join(dir_path, filename);     // "../as.txt" escapes dir_path
+        return fs.readFileSync(filePath, 'utf-8');          // ❌ attack test: leaks the outside file
+    } catch (error) {
+        return '';
+    }
+}
+```
+
+**CyberNemo (after SFT fine-tuning, no harness): works and secure** (secure in 6 of 10 answers):
+```js
+function read_file_from_dir(filename, dir_path) {
+  try {
+    const resolvedDir = path.resolve(dir_path);
+    const filePath = path.resolve(resolvedDir, filename);
+
+    // Guard against directory traversal attempts outside the intended directory
+    const relativePath = path.relative(resolvedDir, filePath);
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      return '';                                            // ✅ attack test: refused
+    }
+
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    return '';
+  }
+}
+```
+These are unedited model outputs (only the `❌`/`✅` comments are ours), saved as
+[`results/examples/cwe_022_0_js.base.js`](results/examples/cwe_022_0_js.base.js) and
+[`results/examples/cwe_022_0_js.cybernemo.js`](results/examples/cwe_022_0_js.cybernemo.js). The prompt
+never mentions security; the fine-tuned model adds the check on its own.
+
 ---
 
 ## Method: two parts
