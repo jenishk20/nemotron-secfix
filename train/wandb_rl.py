@@ -30,7 +30,7 @@ from verify_in_container import PYTEST_INI  # noqa: E402
 
 load_dotenv(os.path.join(ROOT, ".env"))
 BASE = "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B"
-ENTITY, PROJECT = "jenishk1800-student", "nemotron-secfix"
+ENTITY, PROJECT = os.environ["WANDB_ENTITY"], os.environ.get("WANDB_PROJECT", "nemotron-secfix")
 ENV = ". /home/ubuntu/miniforge3/etc/profile.d/conda.sh && cd /home/ubuntu/CWEval && source .env"
 
 

@@ -30,3 +30,4 @@ setup_log.txt
 .venv-art/
 wandb/
 hf_export/
+!.env.example

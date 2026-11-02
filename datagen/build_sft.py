@@ -5,6 +5,7 @@ time); the assistant turn is the verified secure module in one code block.
 Usage: .venv/bin/python datagen/build_sft.py data/synth/py_pilot.jsonl [more.jsonl ...] \
          --out data/train_sec.jsonl [--holdout-cwes 117,643] [--per-lang 250] [--val 0]
 --per-lang N keeps N examples per language, spread evenly over CWEs (round-robin, seeded);
+--lang-cap py=250 overrides that cap for the named languages;
 --val M also writes M held-out rows per language to <out>.val.jsonl.
 """
 import argparse, difflib, glob, json, os, random, re, sys
@@ -62,6 +63,7 @@ def main():
     ap.add_argument("--out", default="data/train_sec.jsonl")
     ap.add_argument("--holdout-cwes", default="")
     ap.add_argument("--per-lang", type=int, default=0)
+    ap.add_argument("--lang-cap", default="")  # e.g. py=250,c=100
     ap.add_argument("--val", type=int, default=0)
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
@@ -87,7 +89,8 @@ def main():
                          "messages": [{"role": "user", "content": user}, {"role": "assistant", "content": asst}]})
 
     train, val = rows, []
-    if a.per_lang or a.val:
+    caps = {k: int(v) for k, v in (x.split("=") for x in a.lang_cap.split(",") if x)}
+    if a.per_lang or a.val or caps:
         rng, train = random.Random(a.seed), []
         for lang in sorted({r["lang"] for r in rows}):
             by_cwe = {}
@@ -96,7 +99,7 @@ def main():
                     by_cwe.setdefault(r["cwe"], []).append(r)
             for lst in by_cwe.values():
                 rng.shuffle(lst)
-            picked, want = [], (a.per_lang or 10**9) + a.val
+            picked, want = [], caps.get(lang, a.per_lang or 10**9) + a.val
             while len(picked) < want and any(by_cwe.values()):  # round-robin over CWEs
                 for c in sorted(by_cwe):
                     if by_cwe[c] and len(picked) < want:

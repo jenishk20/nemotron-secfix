@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from score_in_container import summarize  # noqa: E402
 
 load_dotenv(os.path.join(ROOT, ".env"))
-ENTITY, PROJECT = "jenishk1800-student", "nemotron-secfix"
+ENTITY, PROJECT = os.environ["WANDB_ENTITY"], os.environ.get("WANDB_PROJECT", "nemotron-secfix")
 CWEVAL = "/home/ubuntu/CWEval"
 print_lock = threading.Lock()
 

@@ -7,6 +7,8 @@
 #                     (set GEN_THREADS=1: CWEval's forked workers hang on OpenRouter on macOS)
 #   wbtrain:<id>      a model fine-tuned on W&B Serverless Training (id from train/wandb_sft.py's
 #                     "inference model:" line); base URL from WBTRAIN_BASE_URL (its "base url:")
+#   fireworks:<id>    a Fireworks model or deployment, e.g. fireworks:accounts/<acct>/models/<lora>
+#                     (uses FIREWORKS_API_KEY; LoRAs need a running dedicated deployment)
 #   vertex_ai/<id>    Gemini on Vertex AI, e.g. vertex_ai/gemini-3.5-flash (also needs GEN_THREADS=1);
 #                     uses GCP_PROJECT, GCP_LOCATION and GOOGLE_ADC_B64 from .env
 # Defaults: n=5, temperature 0.8, 8192 max tokens; pass e.g. --langs '["py"]' --ppt secure to override.
@@ -24,6 +26,9 @@ elif [[ "$MODEL" == wbtrain:* ]]; then
   : "${WBTRAIN_BASE_URL:?set WBTRAIN_BASE_URL to the base url printed by train/wandb_sft.py}"
   export OPENAI_API_KEY="$WANDB_API_KEY"
   ARGS+=(--model "openai/${MODEL#wbtrain:}" --api_base "$WBTRAIN_BASE_URL")
+elif [[ "$MODEL" == fireworks:* ]]; then
+  export OPENAI_API_KEY="$FIREWORKS_API_KEY"
+  ARGS+=(--model "openai/${MODEL#fireworks:}" --api_base https://api.fireworks.ai/inference/v1)
 else
   ARGS+=(--model "$MODEL")
 fi
