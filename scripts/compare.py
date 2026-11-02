@@ -19,9 +19,9 @@ RUNS = [  # (label, run, how it was produced)
     ("Nemotron 3.5 Super 120B, base (thinking off)", "super120_nothink_n10", "W&B Inference"),
     ("Nemotron 3.5 Super 120B, base + security prompt", "super120_nothink_secure_n5", "W&B Inference"),
     ("Nemotron 3.5 Super 120B, base (thinking on)", "base_wandb_all_n5", "W&B Inference"),
-    ("**Ours: Nemotron 120B SecFix v1 (thinking off)**", "sft120_think_v1_n10", "Fireworks LoRA, dedicated deployment"),
-    ("**Ours: Nemotron 120B SecFix v2 (thinking off)**", "sft120_think_v2_n10", "Fireworks LoRA, dedicated deployment"),
-    ("**Ours: Nemotron 120B SecFix v2 (thinking on)**", "sft120_think_v2_n10_thinkon", "Fireworks LoRA, dedicated deployment"),
+    ("**Ours: Nemotron 120B CyberNemo v1 (thinking off)**", "sft120_think_v1_n10", "Fireworks LoRA, dedicated deployment"),
+    ("**Ours: Nemotron 120B CyberNemo v2 (thinking off)**", "sft120_think_v2_n10", "Fireworks LoRA, dedicated deployment"),
+    ("**Ours: Nemotron 120B CyberNemo v2 (thinking on)**", "sft120_think_v2_n10_thinkon", "Fireworks LoRA, dedicated deployment"),
     ("Nemotron 3.5 Lightning 30B, base", "lightning_nothink_n10", "W&B Inference"),
 ]
 

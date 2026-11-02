@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SecFix v3: targeted data for the CWE families where v1/v2 fail on CWEval (error analysis, disclosed in README):
+# CyberNemo v3: targeted data for the CWE families where v1/v2 fail on CWEval (error analysis, disclosed in README):
 # CWE-113 header injection, CWE-79 XSS, CWE-918 SSRF (py/js/c/cpp), CWE-347 JWT (c/cpp), CWE-327/329 crypto (cpp).
 # New synthetic tasks (teacher + sandbox verification + 1 repair round) -> 120B thinking self-distill on those
 # tasks only -> merged with v1's data -> checked -> imported to Fireworks via GCS -> LoRA SFT.
