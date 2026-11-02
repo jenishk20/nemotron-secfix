@@ -28,6 +28,7 @@ SYSTEMS = [
     ("Gemini 3.5 Flash", "gemini35flash_all_n5", "other", "gemini35flash", ""),
     ("CyberNemo SFT (ours)", SFT, "ours", "sft120_think_v2_n10_thinkon_speed", ""),
     ("MiniMax M3.1 Flash", "minimax31flash_n5", "other", None, ""),
+    ("Kimi K2.7 Code", "kimik27code_n5_lstrip", "other", None, ""),
     ("Nemotron 120B base", BASE, "base", "nemotron120b_think", ""),
 ]
 

@@ -54,7 +54,7 @@ by default, plus a **security-review harness**. It runs on your own infrastructu
 | Nemotron 120B base | 58.4 | 86.4 | — |
 | **CyberNemo** (SFT fine-tune) | **63.3** | 86.2 | **+4.9** (+0.6 to +9.4), works unchanged |
 | **CyberNemo** (SFT + review harness) | **72.4** | 81.1 | **+14.0** (+5.2 to +23.1), works −5.3 |
-| *Frontier, default mode:* Beam / Gemini 3.8 Flash / DeepSeek V4.1 Flash / Gemini 3.5 Flash / MiniMax M3.1 Flash | 76.2 / 74.3 / 71.3 / 66.6 / 62.0 | 82–91 | SFT + harness is **statistically on par** with the top four (every CI includes 0) |
+| *Frontier, default mode:* Beam / Gemini 3.8 Flash / DeepSeek V4.1 Flash / Kimi K2.7 Code / Gemini 3.5 Flash / MiniMax M3.1 Flash | 76.2 / 74.3 / 71.3 / 67.0 / 66.6 / 62.0 | 82–91 | SFT + harness is **3rd of 8** and **statistically on par** with the top models (every CI includes 0) |
 
 ---
 
@@ -124,6 +124,7 @@ are used.**
 | Gemini 3.8 Flash | 88.9 | **74.3** | 77.1 | 70.0 | 71.7 | 76.8 | 17.9 s | 1,765 |
 | **CyberNemo SFT + harness (ours)** | 81.1 | **72.4** | 75.5 | 73.9 | 67.0 | 72.2 | ~12 s (2 calls) | ~3,800 |
 | DeepSeek V4.1 Flash | 89.0 | **71.3** | 68.7 | 71.0 | 71.3 | 74.8 | 12.6 s | 4,040 |
+| Kimi K2.7 Code* | 87.8 | **67.0** | 69.0 | 64.8 | 59.1 | 73.6 | — | — |
 | Gemini 3.5 Flash* | 91.0 | **66.6** | 67.7 | 66.7 | 67.0 | 64.8 | 7.0 s | 1,805 |
 | MiniMax M3.1 Flash* | 82.4 | **62.0** | 61.3 | 55.2 | 62.6 | 68.0 | — | — |
 | **CyberNemo SFT (ours)** | 86.2 | **63.3** | 68.1 | 56.7 | 60.0 | 66.0 | 6.2 s | 1,883 |
@@ -155,6 +156,7 @@ covered; see `scripts/summarize_existing.py`.
 - The review row is 2 × the measured CyberNemo thinking latency.
 - Beam and DeepSeek were measured while other W&B jobs were running.
 - One of Beam's answers kills the scorer process; it is counted as a **pass** for Beam.
+- Every Kimi K2.7 Code answer starts with a space before the code fence, which CWEval's extractor misses (score 1.0). We strip leading whitespace before scoring it.
 
 ## Limitations
 - **Functionality:** CyberNemo + review works 81% of the time vs 87–91% for frontier models (−6 to
