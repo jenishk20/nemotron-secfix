@@ -315,12 +315,6 @@ footer p{margin:.2rem 0}
     <div class="card rv d2 tilt"><div class="num">03</div><h3>Too much to review</h3><p>AI writes faster than humans audit.</p></div>
     <div class="card rv d3 tilt"><div class="num">04</div><h3>Fixes need know-how</h3><p>One line, if you know the pattern.</p></div>
   </div>
-
-  <div class="card rv" style="margin-top:16px">
-    <h3>Code that works but can be exploited</h3>
-    <p class="note">% of answers on CWEval · lower is better</p>
-    <div class="xbars" id="xbars"></div>
-  </div>
 </section>
 
 <section id="tarslip">
@@ -402,10 +396,6 @@ footer p{margin:.2rem 0}
     <div class="card rv d1"><h3>~12 s with review</h3><p>Fast mode: 1.1–1.8 s at 59.3.</p></div>
     <div class="card rv d2"><h3>Scope</h3><p>Single functions, 4 languages, one benchmark.</p></div>
   </div>
-  <footer>
-  <p>Team: Arjun Prasaath Anbazhagan (lead), Jenish Kothari · <a href="https://github.com/jenishk20/nemotron-secfix">github.com/jenishk20/nemotron-secfix</a></p>
-  <p><a href="https://arise-lab.github.io/cweval-bench/">CWEval</a> (Apache-2.0) · NVIDIA Nemotron · Fireworks AI. Animations are illustrations; numbers are from the repo's results.</p>
-  </footer>
 </section>
 
 </main>
@@ -508,7 +498,6 @@ function drawX(id, rows){
     `<div class="xrow${k === "harn" || k === "sft" ? " ours" : ""}"><span>${n}</span><div class="tr"><div class="fl" style="background:var(--${k})" data-w="${v / 30 * 100}"></div></div><span class="v">${v.toFixed(1)}%</span></div>`));
   onView(el, () => el.querySelectorAll(".fl").forEach((f, i) => setTimeout(() => f.style.width = f.dataset.w + "%", i * 90)));
 }
-drawX("xbars", XB.filter(r => r[2] !== "sft" && r[2] !== "harn"));
 drawX("xbars2", XB);
 
 // tar slip simulation
