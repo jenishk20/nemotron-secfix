@@ -99,6 +99,8 @@ These are unedited model outputs (only the `❌`/`✅` comments are ours), saved
 [`results/examples/cwe_022_0_js.cybernemo.js`](results/examples/cwe_022_0_js.cybernemo.js). The prompt
 never mentions security; the fine-tuned model adds the check on its own.
 
+**Interactive pages:** [`docs/site/index.html`](docs/site/index.html) (project page with interactive charts) · [`docs/deck/index.html`](docs/deck/index.html) (7-slide video deck; arrow keys, N for notes). Download and open in a browser.
+
 ---
 
 ## Method: two parts

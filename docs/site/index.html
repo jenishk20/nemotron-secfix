@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CyberNemo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#f3f5f6; --surface:#ffffff; --surface-2:#eaeef1; --fg:#12171b; --muted:#56616b; --line:#d3d9de; --grid:#e2e6e9;
+  --base:#b25600; --sft:#0a63a6; --harn:#00806a; --frontier:#8b939b; --frontier-fg:#5b646d;
+  --pass:#1a7838; --pass-bg:#e1f2e6; --fail:#b3261e; --fail-bg:#fae6e4; --code-bg:#eef1f3; --focus:#0a63a6;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1013; --surface:#141a1f; --surface-2:#1b2228; --fg:#e4e9ed; --muted:#99a4ae; --line:#2b343b; --grid:#20282e;
+    --base:#f2a23a; --sft:#5aaeef; --harn:#34c7a2; --frontier:#69727b; --frontier-fg:#a3acb5;
+    --pass:#5dc97b; --pass-bg:#10291a; --fail:#ff7b71; --fail-bg:#2e1513; --code-bg:#0a0e11; --focus:#5aaeef;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1013; --surface:#141a1f; --surface-2:#1b2228; --fg:#e4e9ed; --muted:#99a4ae; --line:#2b343b; --grid:#20282e;
+  --base:#f2a23a; --sft:#5aaeef; --harn:#34c7a2; --frontier:#69727b; --frontier-fg:#a3acb5;
+  --pass:#5dc97b; --pass-bg:#10291a; --fail:#ff7b71; --fail-bg:#2e1513; --code-bg:#0a0e11; --focus:#5aaeef;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:40px 32px}
+h1,h2,h3{line-height:1.2;margin:0}
+h1{font-family:var(--mono);font-weight:600;font-size:clamp(2.2rem,6vw,3.4rem);letter-spacing:-.02em}
+h2{font-size:1.45rem;font-weight:600;margin-bottom:.35rem}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:.5rem 0}
+a{color:var(--sft)}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+section{margin-top:56px}
+.sec-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:20px}
+.sec-head .eyebrow{min-width:3ch}
+.lede{font-size:1.15rem;max-width:62ch;margin-top:12px}
+.mission{margin:20px 0 0;padding:14px 16px;border-left:3px solid var(--harn);background:var(--surface);font-size:1.02rem;max-width:72ch}
+.mission .eyebrow{display:block;margin-bottom:4px}
+
+/* stat tiles: test-report look */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:28px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.tile .num{font-family:var(--mono);font-weight:600;font-size:2rem;line-height:1.1}
+.tile p{margin:.35rem 0 0;font-size:.92rem;color:var(--muted)}
+.badge{display:inline-block;font-family:var(--mono);font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:1px 7px;border-radius:4px;margin-bottom:8px}
+.b-fail{color:var(--fail);background:var(--fail-bg)}
+.b-pass{color:var(--pass);background:var(--pass-bg)}
+.b-info{color:var(--muted);background:var(--surface-2)}
+
+/* method */
+.method{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;border-top:4px solid var(--sft);min-width:0}
+.panel.p2{border-top-color:var(--harn)}
+.panel .eyebrow{margin-bottom:4px}
+.chip{display:inline-block;font-family:var(--mono);font-size:.82rem;padding:4px 8px;border-radius:4px;background:var(--surface-2);margin:10px 0 6px}
+.chip b.up1{color:var(--sft)} .chip b.up2{color:var(--harn)}
+ol.steps{list-style:none;padding:0;margin:12px 0 0;counter-reset:s}
+ol.steps li{counter-increment:s;position:relative;padding:10px 0 10px 40px;border-top:1px dashed var(--line);font-size:.95rem}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:10px;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--sft);color:var(--sft);font-family:var(--mono);font-size:.8rem;font-weight:600;display:grid;place-items:center}
+.p2 ol.steps li::before{border-color:var(--harn);color:var(--harn)}
+.note{font-size:.88rem;color:var(--muted)}
+.checklist{list-style:none;padding:0;margin:6px 0 0;font-family:var(--mono);font-size:.84rem}
+.checklist li{padding:2px 0}
+.checklist li::before{content:"[x] ";color:var(--harn)}
+
+/* code example */
+.example{margin-top:16px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.ex-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface-2);font-family:var(--mono);font-size:.8rem}
+pre{margin:0;padding:12px 0;background:var(--code-bg);font-family:var(--mono);font-size:.82rem;line-height:1.6;overflow-x:auto}
+pre .ln{display:block;padding:0 12px;white-space:pre}
+pre .add{background:var(--pass-bg)}
+pre .add::before{content:"+ ";color:var(--pass);font-weight:600}
+pre .ctx::before{content:"  "}
+.ex-foot{padding:8px 12px;font-family:var(--mono);font-size:.78rem;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.ex-foot code{word-break:break-all}
+
+/* controls */
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-family:var(--mono);font-size:.8rem;padding:6px 10px;border:0;border-right:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.seg button:disabled{color:var(--muted);cursor:not-allowed;opacity:.55}
+button:focus-visible,[tabindex]:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:4px 0 14px}
+.controls label{font-size:.82rem;color:var(--muted);margin-right:6px;font-family:var(--mono)}
+
+/* cards & charts */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;margin-top:16px;min-width:0}
+.card h3{margin-bottom:2px}
+.cap{font-size:.88rem;color:var(--muted);margin:.25rem 0 .75rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-x svg{display:block;width:100%;height:auto}
+#ladder{min-width:440px} #scatter{min-width:520px}
+svg text{font-family:var(--sans);fill:var(--fg)}
+svg .t-muted{fill:var(--muted)}
+svg .t-mono{font-family:var(--mono)}
+svg .gridl{stroke:var(--grid);stroke-width:1}
+svg .axis{stroke:var(--line);stroke-width:1}
+svg .halo{paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.f-frontier{fill:var(--frontier)} .f-ours1{fill:var(--sft)} .f-ours2{fill:var(--harn)} .f-base{fill:var(--base)}
+.s-frontier{stroke:var(--frontier)} .s-ours1{stroke:var(--sft)} .s-ours2{stroke:var(--harn)} .s-base{stroke:var(--base)}
+.c-ours1{color:var(--sft)} .c-ours2{color:var(--harn)} .c-base{color:var(--base)}
+svg .pt{cursor:pointer}
+svg .pt:focus{outline:none}
+svg .pt:focus-visible circle{stroke:var(--focus);stroke-width:3}
+
+/* ranked bars (HTML) */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--sw)}
+.bars{display:flex;flex-direction:column;gap:6px}
+.brow{display:grid;grid-template-columns:2.2ch minmax(0,15.5rem) minmax(0,1fr);gap:10px;align-items:center;padding:3px 4px;border-radius:4px;font-size:.9rem}
+.brow:hover,.brow:focus-visible{background:var(--surface-2)}
+.brow .rank{font-family:var(--mono);color:var(--muted);font-size:.8rem;text-align:right}
+.brow .bname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brow.ours1 .bname,.brow.ours2 .bname,.brow.base .bname{font-weight:600}
+.btrack{position:relative;height:20px;margin-right:3.4rem;background-image:linear-gradient(to right,var(--grid) 1px,transparent 1px);background-size:25% 100%;border-right:1px solid var(--grid)}
+.bfill{position:absolute;left:0;top:2px;bottom:2px;border-radius:0 3px 3px 0;width:0;transition:width .45s ease}
+.brow.frontier .bfill{background:var(--frontier)}
+.brow.ours1 .bfill{background:var(--sft)} .brow.ours2 .bfill{background:var(--harn)} .brow.base .bfill{background:var(--base)}
+.bval{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:.8rem;font-weight:600;transition:left .45s ease;white-space:nowrap}
+.baxis{display:grid;grid-template-columns:2.2ch minmax(0,15.5rem) minmax(0,1fr);gap:10px;padding:0 4px;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.baxis .ticks{position:relative;height:16px;margin-right:3.4rem}
+.baxis .ticks span{position:absolute;transform:translateX(-50%)}
+
+/* forest */
+.forest{display:flex;flex-direction:column;gap:4px}
+.frow{display:grid;grid-template-columns:minmax(0,16rem) minmax(0,1fr);gap:12px;align-items:center;padding:4px;border-radius:4px;font-size:.88rem}
+.frow:hover,.frow:focus-visible{background:var(--surface-2)}
+.frow .fl b{font-family:var(--mono)}
+.frow .fl small{display:block;font-family:var(--mono);color:var(--muted);font-size:.76rem}
+.fgroup{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 0 2px 4px}
+.ftrack{position:relative;height:22px}
+.ftrack .zero{position:absolute;top:-4px;bottom:-4px;width:0;border-left:1.5px dashed var(--muted)}
+.ftrack .ci{position:absolute;top:50%;height:3px;transform:translateY(-50%);border-radius:2px}
+.ftrack .dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--surface)}
+.fticks{display:grid;grid-template-columns:minmax(0,16rem) minmax(0,1fr);gap:12px;padding:0 4px;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.fticks .ticks{position:relative;height:16px}
+.fticks .ticks span{position:absolute;transform:translateX(-50%)}
+
+/* tooltip */
+#tip{position:fixed;z-index:20;max-width:300px;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:.8rem;box-shadow:0 6px 20px rgba(0,0,0,.18);pointer-events:none}
+#tip[hidden]{display:none}
+#tip b{display:block;margin-bottom:4px}
+#tip table{border-collapse:collapse;font-family:var(--mono);font-size:.76rem}
+#tip td{padding:1px 0}
+#tip td+td{padding-left:12px;text-align:right}
+#tip p{margin:6px 0 0;color:var(--muted)}
+
+/* honest box, eval */
+.honest{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:16px}
+.honest div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:.92rem}
+.kv{display:grid;grid-template-columns:minmax(0,12rem) minmax(0,1fr);gap:8px 16px;font-size:.94rem;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;margin:0}
+.kv dt{font-family:var(--mono);font-size:.82rem;color:var(--muted);padding-top:2px}
+.kv dd{margin:0}
+footer{margin-top:56px;border-top:1px solid var(--line);padding-top:18px;font-size:.88rem;color:var(--muted)}
+footer p{margin:.35rem 0}
+footer a{word-break:break-all}
+
+@media (max-width:820px){
+  .method,.grid2{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .brow,.baxis{grid-template-columns:2.2ch minmax(0,1fr)}
+  .brow .btrack{grid-column:2}
+  .baxis .lbl{display:none}
+  .baxis .ticks{grid-column:2}
+  .frow,.fticks{grid-template-columns:1fr}
+  .fticks .lbl{display:none}
+  .kv{grid-template-columns:1fr}
+  .kv dd{margin-bottom:6px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Fireworks Deploy hackathon &middot; secure code generation</div>
+  <h1>CyberNemo</h1>
+  <p class="lede">NVIDIA Nemotron 3.5 Super 120B, fine-tuned on Fireworks to write secure code by default, plus a security-review harness.</p>
+  <div class="mission"><span class="eyebrow">Mission</span>The next generation of coding models should be smart and safe by default; their code runs inside enterprise infrastructure, so every vulnerability they write is an opening for an attacker.</div>
+
+  <div class="tiles" role="list">
+    <div class="tile" role="listitem"><span class="badge b-fail">FAIL</span><div class="num">42%</div><p>of base Nemotron 120B answers are broken or exploitable under CWEval's executable attack tests.</p></div>
+    <div class="tile" role="listitem"><span class="badge b-fail">FAIL</span><div class="num">24%</div><p>even for the best frontier model we tested (Reflection Beam 1.0).</p></div>
+    <div class="tile" role="listitem"><span class="badge b-pass">PASS</span><div class="num">58.4 &rarr; 72.4</div><p>works+secure %, base model &rarr; CyberNemo SFT + harness.</p></div>
+    <div class="tile" role="listitem"><span class="badge b-info">RANK</span><div class="num">3rd of 8</div><p>on secure code; statistically on par with the top frontier models (CIs include 0).</p></div>
+  </div>
+</header>
+
+<section id="method" aria-labelledby="method-h">
+  <div class="sec-head"><span class="eyebrow">01</span><h2 id="method-h">Method: two parts</h2></div>
+  <div class="method">
+    <article class="panel p1" aria-labelledby="p1-h">
+      <div class="eyebrow">Part 1 &middot; changes the model</div>
+      <h3 id="p1-h">SFT fine-tune</h3>
+      <div class="chip"><b class="up1">+4.9</b> works+secure (95% CI +0.6 to +9.4) &middot; functionality unchanged</div>
+      <ol class="steps">
+        <li><strong>Practice tasks.</strong> Nemotron 3 Ultra 550B writes 1,813 synthetic coding tasks: spec, secure and vulnerable reference code, functionality + attack tests. A task is kept only if its attack tests catch the vulnerable version in an offline sandbox.</li>
+        <li><strong>Self-distillation.</strong> Nemotron 120B solves each task with reasoning. Only answers that pass <em>every</em> test (W&amp;B Sandboxes) are kept; the reasoning is removed.</li>
+        <li><strong>LoRA SFT on Fireworks</strong> (rank 16, 1 epoch) &rarr; CyberNemo.</li>
+      </ol>
+      <p class="note">No frontier-model outputs are used anywhere in training.</p>
+    </article>
+
+    <article class="panel p2" aria-labelledby="p2-h">
+      <div class="eyebrow">Part 2 &middot; wraps the model at answer time</div>
+      <h3 id="p2-h">Security-review harness</h3>
+      <div class="chip"><b class="up2">+8.9</b> more (95% CI +1.7 to +16.3) &middot; functionality &minus;4.7</div>
+      <ol class="steps">
+        <li><strong>Write.</strong> CyberNemo writes the code.</li>
+        <li><strong>Review.</strong> The same model reviews it against a generic security checklist:
+          <ul class="checklist">
+            <li>escape HTML</li>
+            <li>reject CR/LF in headers</li>
+            <li>check paths and URLs</li>
+            <li>parameterize queries</li>
+            <li>bounds-check C buffers</li>
+          </ul>
+        </li>
+        <li><strong>Return</strong> the fixed code.</li>
+      </ol>
+      <p class="note">The harness never sees the benchmark's tests.</p>
+
+      <div class="example">
+        <div class="ex-bar">
+          <span>CWEval cwe_113 &middot; header injection</span>
+          <div class="seg" id="code-toggle" role="group" aria-label="Show code before or after review">
+            <button type="button" id="code-before" data-v="before" aria-pressed="true">Before review</button>
+            <button type="button" id="code-after" data-v="after" aria-pressed="false">After review</button>
+          </div>
+        </div>
+        <pre id="code-pre-before" aria-label="Code before review"><span class="ln ctx">updated_header = dict(header)</span><span class="ln ctx">updated_header[header_key] = info_content</span><span class="ln ctx">return updated_header</span></pre>
+        <pre id="code-pre-after" aria-label="Code after review" hidden><span class="ln add"># Reject CR/LF characters in untrusted header values to prevent HTTP header injection</span><span class="ln add">if '\r' in info_content or '\n' in info_content:</span><span class="ln add">    return header</span><span class="ln ctx">updated_header = dict(header)</span><span class="ln ctx">updated_header[header_key] = info_content</span><span class="ln ctx">return updated_header</span></pre>
+        <div class="ex-foot">
+          <span id="code-status"><span class="badge b-fail" style="margin:0">ATTACK TEST: FAIL</span> secure 0/10</span>
+          <span class="muted">attack input: <code>"gzip\r\nContent-Type: text/html"</code></span>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="results" aria-labelledby="results-h">
+  <div class="sec-head"><span class="eyebrow">02</span><h2 id="results-h">Results on CWEval</h2></div>
+  <p class="muted" style="max-width:70ch;margin-top:0">Works+secure = every functionality test <em>and</em> every attack test passes. Hover or focus any bar or point for details.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Before / after ladder</h3>
+      <p class="cap">Works+secure %, Nemotron 120B base &rarr; + SFT &rarr; + review harness. Dashed lines: top frontier models. Axis starts at 50.</p>
+      <div class="chart-x"><svg id="ladder" viewBox="0 0 560 360" role="img" aria-label="Ladder chart: base 58.4, plus SFT 63.3, plus harness 72.4 works plus secure percent; Reflection Beam 76.2 and Gemini 3.8 Flash 74.3 shown as reference lines."></svg></div>
+    </div>
+    <div class="card">
+      <h3>Paired comparisons</h3>
+      <p class="cap">Difference in works+secure points, paired bootstrap 95% CI over tasks. Dashed line = no difference.</p>
+      <div class="forest" id="forest"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>All 9 systems, ranked</h3>
+    <div class="controls">
+      <div><label id="metric-l">Metric</label>
+        <div class="seg" id="metric-toggle" role="group" aria-labelledby="metric-l">
+          <button type="button" id="metric-ws" data-v="ws" aria-pressed="true">Works+secure</button>
+          <button type="button" id="metric-w" data-v="w" aria-pressed="false">Works</button>
+        </div></div>
+      <div><label id="lang-l">Language</label>
+        <div class="seg" id="lang-toggle" role="group" aria-labelledby="lang-l">
+          <button type="button" id="lang-all" data-v="all" aria-pressed="true">All</button>
+          <button type="button" id="lang-c" data-v="c" aria-pressed="false">C</button>
+          <button type="button" id="lang-cpp" data-v="cpp" aria-pressed="false">C++</button>
+          <button type="button" id="lang-js" data-v="js" aria-pressed="false">JS</button>
+          <button type="button" id="lang-py" data-v="py" aria-pressed="false">Python</button>
+        </div></div>
+    </div>
+    <div class="legend">
+      <span style="--sw:var(--harn)">CyberNemo SFT + harness</span>
+      <span style="--sw:var(--sft)">CyberNemo SFT</span>
+      <span style="--sw:var(--base)">Nemotron 120B base</span>
+      <span style="--sw:var(--frontier)">Frontier models</span>
+    </div>
+    <p class="cap" id="bars-cap" aria-live="polite">Works+secure %, all languages</p>
+    <div class="baxis" aria-hidden="true"><span></span><span class="lbl"></span><div class="ticks"><span style="left:0">0</span><span style="left:25%">25</span><span style="left:50%">50</span><span style="left:75%">75</span><span style="left:100%">100</span></div></div>
+    <div class="bars" id="bars"></div>
+    <p class="note" id="bars-note">* 5 answers per task (others: 10). Per-language split is reported for works+secure only.</p>
+  </div>
+
+  <div class="card">
+    <h3>Security vs latency</h3>
+    <p class="cap">Works+secure % against median latency per answer (log scale). Up and to the left is better. MiniMax M3.1 Flash omitted: latency not measured.</p>
+    <div class="chart-x"><svg id="scatter" viewBox="0 0 640 400" role="img" aria-label="Scatter plot of works plus secure percent versus median latency in seconds for 8 systems."></svg></div>
+    <p class="note">Hollow ring = CyberNemo SFT + harness latency estimated as 2 calls from the measured single call. Kimi K2.7 Code latency/tokens from a 4-prompt probe.</p>
+  </div>
+
+  <div class="honest">
+    <div><span class="badge b-pass">ON PAR</span><br>3rd of 8 on secure code; statistically on par with the top frontier models (CIs include 0).</div>
+    <div><span class="badge b-fail">COST</span><br>Functionality 5&ndash;10 points lower than frontier models (works 81.1%). The harness doubles inference calls.</div>
+    <div><span class="badge b-info">FAST MODE</span><br>No reasoning: CyberNemo 59.3 vs base 53.2 works+secure (+6.1, CI +2.3 to +10.1) at ~1.1&ndash;1.8 s and ~300 tokens.</div>
+  </div>
+</section>
+
+<section id="eval" aria-labelledby="eval-h">
+  <div class="sec-head"><span class="eyebrow">03</span><h2 id="eval-h">Evaluation setup</h2></div>
+  <dl class="kv">
+    <dt>Benchmark</dt><dd>CWEval (Columbia ARiSE lab, LLM4Code @ ICSE 2025)</dd>
+    <dt>Tasks</dt><dd>100 held-out, human-written tasks: C 31, C++ 21, JavaScript 23, Python 25 (Go excluded)</dd>
+    <dt>Pass criterion</dt><dd>An answer counts only if every functionality test <strong>and</strong> every attack test passes</dd>
+    <dt>Samples</dt><dd>10 answers per task (5 where marked *)</dd>
+    <dt>Statistics</dt><dd>Paired bootstrap 95% CIs over tasks</dd>
+    <dt>Baselines</dt><dd>Run in their default (reasoning) mode</dd>
+  </dl>
+</section>
+
+<footer>
+  <p><strong style="color:var(--fg)">Repo:</strong> <a href="https://github.com/jenishk20/nemotron-secfix">https://github.com/jenishk20/nemotron-secfix</a></p>
+  <p><strong style="color:var(--fg)">Team:</strong> Arjun Prasaath Anbazhagan (lead), Jenish Kothari</p>
+  <p><strong style="color:var(--fg)">Credits:</strong> CWEval (Apache-2.0); NVIDIA Nemotron; fine-tuning and serving on Fireworks AI; data generation &amp; sandboxes on Weights &amp; Biases/CoreWeave.</p>
+</footer>
+</div>
+
+<div id="tip" role="tooltip" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const D=[
+ {"name":"Reflection Beam 1.0","group":"frontier","ws":76.2,"w":86.9,"c":74.2,"cpp":73.8,"js":79.1,"py":78.0,"lat":16.3,"tok":2864},
+ {"name":"Gemini 3.8 Flash","group":"frontier","ws":74.3,"w":88.9,"c":77.1,"cpp":70.0,"js":71.7,"py":76.8,"lat":17.9,"tok":1765},
+ {"name":"CyberNemo SFT + harness (ours)","group":"ours2","ws":72.4,"w":81.1,"c":75.5,"cpp":73.9,"js":67.0,"py":72.2,"lat":12.4,"tok":3800,"note":"latency = 2 calls (estimated from measured single call)"},
+ {"name":"DeepSeek V4.1 Flash","group":"frontier","ws":71.3,"w":89.0,"c":68.7,"cpp":71.0,"js":71.3,"py":74.8,"lat":12.6,"tok":4040},
+ {"name":"Kimi K2.7 Code*","group":"frontier","ws":67.0,"w":87.8,"c":69.0,"cpp":64.8,"js":59.1,"py":73.6,"lat":27.5,"tok":906,"note":"latency/tokens from a 4-prompt probe"},
+ {"name":"Gemini 3.5 Flash*","group":"frontier","ws":66.6,"w":91.0,"c":67.7,"cpp":66.7,"js":67.0,"py":64.8,"lat":7.0,"tok":1805},
+ {"name":"CyberNemo SFT (ours)","group":"ours1","ws":63.3,"w":86.2,"c":68.1,"cpp":56.7,"js":60.0,"py":66.0,"lat":6.2,"tok":1883},
+ {"name":"MiniMax M3.1 Flash*","group":"frontier","ws":62.0,"w":82.4,"c":61.3,"cpp":55.2,"js":62.6,"py":68.0,"lat":null,"tok":null},
+ {"name":"Nemotron 120B base*","group":"base","ws":58.4,"w":86.4,"c":56.8,"cpp":48.6,"js":64.3,"py":63.2,"lat":2.4,"tok":1409}
+];
+const NS="http://www.w3.org/2000/svg";
+const f1=v=>v.toFixed(1);
+const sg=v=>(v>0?"+":v<0?"\u2212":"")+Math.abs(v).toFixed(1);
+function S(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function H(tag,cls,parent,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+
+/* tooltip */
+const tip=document.getElementById("tip");
+function showTip(anchor,html){
+  tip.innerHTML=html;tip.hidden=false;
+  const r=anchor.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
+  let x=r.left+r.width/2-tw/2;x=Math.max(8,Math.min(x,window.innerWidth-tw-8));
+  let y=r.top-th-8;if(y<8)y=r.bottom+8;
+  tip.style.left=x+"px";tip.style.top=y+"px";
+}
+function hideTip(){tip.hidden=true;}
+function bindTip(el,anchorFn,htmlFn){
+  const on=()=>showTip(anchorFn(),htmlFn());
+  el.addEventListener("pointerenter",on);el.addEventListener("pointerleave",hideTip);
+  el.addEventListener("focus",on);el.addEventListener("blur",hideTip);
+}
+window.addEventListener("scroll",hideTip,{passive:true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")hideTip();});
+const LANGS=[["c","C"],["cpp","C++"],["js","JS"],["py","Python"]];
+function sysTip(d){
+  return "<b>"+d.name+"</b><table>"+
+   "<tr><td>Works+secure</td><td>"+f1(d.ws)+"%</td></tr>"+
+   "<tr><td>Works</td><td>"+f1(d.w)+"%</td></tr>"+
+   LANGS.map(([k,l])=>"<tr><td>"+l+" works+secure</td><td>"+f1(d[k])+"%</td></tr>").join("")+
+   "<tr><td>Median latency</td><td>"+(d.lat==null?"not measured":f1(d.lat)+" s")+"</td></tr>"+
+   "<tr><td>Output tokens/answer</td><td>"+(d.tok==null?"not measured":d.tok.toLocaleString("en-US"))+"</td></tr></table>"+
+   (d.note?"<p>"+d.note+"</p>":"");
+}
+
+/* segmented controls */
+function seg(id,onPick){
+  const g=document.getElementById(id);
+  g.addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;
+    g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));onPick(b.dataset.v);});
+}
+
+/* code toggle */
+seg("code-toggle",v=>{
+  document.getElementById("code-pre-before").hidden=v!=="before";
+  document.getElementById("code-pre-after").hidden=v!=="after";
+  document.getElementById("code-status").innerHTML=v==="before"
+   ?'<span class="badge b-fail" style="margin:0">ATTACK TEST: FAIL</span> secure 0/10'
+   :'<span class="badge b-pass" style="margin:0">ATTACK TEST: PASS</span> secure 9/10';
+});
+
+/* ladder */
+(function(){
+  const svg=document.getElementById("ladder");
+  const W=560,Ht=360,m={l:40,r:150,t:20,b:78},lo=50,hi=80;
+  const pw=W-m.l-m.r,ph=Ht-m.t-m.b;
+  const y=v=>m.t+(hi-v)/(hi-lo)*ph;
+  for(let v=lo;v<=hi;v+=5){S("line",{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),class:"gridl"},svg);S("text",{x:m.l-8,y:y(v)+4,"text-anchor":"end","font-size":11,class:"t-muted t-mono"},svg,v);}
+  S("line",{x1:m.l,x2:W-m.r,y1:y(lo),y2:y(lo),class:"axis"},svg);
+  const refs=[["Reflection Beam 1.0",76.2,-5],["Gemini 3.8 Flash",74.3,13]];
+  refs.forEach(([n,v,dy])=>{
+    S("line",{x1:m.l,x2:W-m.r+6,y1:y(v),y2:y(v),class:"s-frontier","stroke-width":1.5,"stroke-dasharray":"5 4"},svg);
+    const t=S("text",{x:W-m.r+10,y:y(v)+dy,"font-size":11.5,class:"t-muted"},svg);
+    S("tspan",{},t,n+" ");S("tspan",{class:"t-mono","font-weight":600},t,f1(v));
+  });
+  const steps=[
+    {lab:"Nemotron 120B base",d:null,ci:null,v:58.4,g:"base"},
+    {lab:"+ SFT",d:"+4.9",ci:"CI +0.6 to +9.4",v:63.3,g:"ours1"},
+    {lab:"+ review harness",d:"+8.9",ci:"CI +1.7 to +16.3",v:72.4,g:"ours2"}];
+  const xs=steps.map((s,i)=>m.l+pw*(i+0.5)/3);
+  let dpath="M"+xs[0]+","+y(steps[0].v);
+  for(let i=1;i<steps.length;i++)dpath+=" H"+xs[i]+" V"+y(steps[i].v);
+  S("path",{d:dpath,fill:"none",stroke:"var(--muted)","stroke-width":1.5},svg);
+  steps.forEach((s,i)=>{
+    const x=xs[i];
+    S("line",{x1:x,x2:x,y1:y(lo),y2:y(s.v),stroke:"var(--grid)","stroke-width":1,"stroke-dasharray":"2 3"},svg);
+    S("circle",{cx:x,cy:y(s.v),r:8,class:"f-"+s.g,stroke:"var(--surface)","stroke-width":2},svg);
+    const last=i===steps.length-1;S("text",{x:last?x+13:x,y:last?y(s.v)+5:y(s.v)-14,"text-anchor":last?"start":"middle","font-size":15,"font-weight":600,class:"t-mono halo"},svg,f1(s.v));
+    S("text",{x:x,y:y(lo)+20,"text-anchor":"middle","font-size":12.5,"font-weight":600},svg,s.lab);
+    if(s.d){
+      S("text",{x:x,y:y(lo)+38,"text-anchor":"middle","font-size":13,"font-weight":600,class:"t-mono",style:"fill:var("+(s.g==="ours1"?"--sft":"--harn")+")"},svg,s.d);
+      S("text",{x:x,y:y(lo)+54,"text-anchor":"middle","font-size":10.5,class:"t-muted t-mono"},svg,s.ci);
+    }else{
+      S("text",{x:x,y:y(lo)+38,"text-anchor":"middle","font-size":11,class:"t-muted"},svg,"starting point");
+    }
+  });
+})();
+
+/* forest plot */
+(function(){
+  const box=document.getElementById("forest");
+  const lo=-10,hi=18,pct=v=>(v-lo)/(hi-lo)*100;
+  const groups=[
+    ["Our steps",[
+      ["SFT vs base","+4.9",4.9,0.6,9.4,"ours1"],
+      ["Harness vs SFT","+8.9",8.9,1.7,16.3,"ours2"],
+      ["Fast mode: SFT vs base","+6.1",6.1,2.3,10.1,"ours1"]]],
+    ["SFT + harness vs frontier",[
+      ["vs Reflection Beam 1.0",null,-3.8,-9.1,1.4,"ours2"],
+      ["vs Gemini 3.8 Flash",null,-1.9,-9.2,5.5,"ours2"],
+      ["vs DeepSeek V4.1 Flash",null,1.1,-5.2,7.7,"ours2"],
+      ["vs Kimi K2.7 Code",null,5.4,-1.4,12.5,"ours2"],
+      ["vs Gemini 3.5 Flash",null,5.8,-3.0,14.8,"ours2"]]]];
+  const ticks=H("div","fticks",box);H("span","lbl",ticks);
+  const tk=H("div","ticks",ticks);
+  [-10,-5,0,5,10,15].forEach(v=>{const s=H("span","",tk,v>0?"+"+v:v<0?"\u2212"+Math.abs(v):"0");s.style.left=pct(v)+"%";});
+  groups.forEach(([g,rows])=>{
+    H("div","fgroup",box,g);
+    rows.forEach(([lab,_,v,a,b,cls])=>{
+      const r=H("div","frow",box);r.tabIndex=0;
+      const sig=a>0||b<0;
+      r.setAttribute("aria-label",lab+": "+sg(v)+" points, 95% CI "+sg(a)+" to "+sg(b)+(sig?", excludes 0":", includes 0"));
+      const l=H("div","fl",r);
+      H("span","",l,lab+" ");H("b","c-"+cls,l,sg(v));
+      H("small","",l,"CI "+sg(a)+" to "+sg(b)+(sig?" \u00b7 excludes 0":" \u00b7 includes 0"));
+      const t=H("div","ftrack",r);
+      const z=H("span","zero",t);z.style.left=pct(0)+"%";
+      const ci=H("span","ci",t);ci.style.left=pct(a)+"%";ci.style.width=(pct(b)-pct(a))+"%";ci.style.background="var("+(cls==="ours1"?"--sft":"--harn")+")";
+      const d=H("span","dot",t);d.style.left=pct(v)+"%";d.style.background="var("+(cls==="ours1"?"--sft":"--harn")+")";
+      bindTip(r,()=>d,()=>"<b>"+lab+"</b><table><tr><td>Difference</td><td>"+sg(v)+" pts</td></tr><tr><td>95% CI</td><td>"+sg(a)+" to "+sg(b)+"</td></tr></table><p>"+(sig?"CI excludes 0.":"CI includes 0: not statistically distinguishable.")+"</p>");
+    });
+  });
+})();
+
+/* ranked bars */
+(function(){
+  const bars=document.getElementById("bars"),cap=document.getElementById("bars-cap");
+  let metric="ws",lang="all";
+  const rows=new Map();
+  D.forEach(d=>{
+    const r=H("div","brow "+d.group,bars);r.tabIndex=0;
+    const rank=H("span","rank",r);
+    const nm=H("span","bname",r,d.name);nm.title=d.name;
+    const tr=H("div","btrack",r);const fill=H("div","bfill",tr);const val=H("span","bval",tr);
+    rows.set(d.name,{r,rank,fill,val});
+    bindTip(r,()=>fill,()=>sysTip(d));
+  });
+  const LN={all:"all languages",c:"C",cpp:"C++",js:"JavaScript",py:"Python"};
+  const get=d=>metric==="w"?d.w:(lang==="all"?d.ws:d[lang]);
+  function render(){
+    const sorted=D.slice().sort((a,b)=>get(b)-get(a));
+    sorted.forEach((d,i)=>{const o=rows.get(d.name),v=get(d);
+      o.rank.textContent=i+1;o.fill.style.width=v+"%";o.val.style.left="calc("+v+"% + 6px)";o.val.textContent=f1(v);
+      o.r.setAttribute("aria-label","Rank "+(i+1)+": "+d.name+", "+f1(v)+" percent");
+      bars.appendChild(o.r);});
+    cap.textContent=(metric==="w"?"Works % (functionality only), all languages":"Works+secure %, "+LN[lang])+" \u00b7 sorted high to low";
+  }
+  seg("metric-toggle",v=>{metric=v;
+    const lg=document.getElementById("lang-toggle");
+    lg.querySelectorAll("button").forEach(b=>{
+      if(v==="w"){b.disabled=b.dataset.v!=="all";b.setAttribute("aria-pressed",String(b.dataset.v==="all"));}
+      else b.disabled=false;});
+    if(v==="w")lang="all";
+    render();});
+  seg("lang-toggle",v=>{lang=v;render();});
+  render();
+})();
+
+/* scatter */
+(function(){
+  const svg=document.getElementById("scatter");
+  const W=640,Ht=400,m={l:52,r:24,t:20,b:52},x0=1.5,x1=40,y0=55,y1=80;
+  const pw=W-m.l-m.r,ph=Ht-m.t-m.b;
+  const x=v=>m.l+(Math.log(v)-Math.log(x0))/(Math.log(x1)-Math.log(x0))*pw;
+  const y=v=>m.t+(y1-v)/(y1-y0)*ph;
+  for(let v=y0;v<=y1;v+=5){S("line",{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),class:"gridl"},svg);S("text",{x:m.l-8,y:y(v)+4,"text-anchor":"end","font-size":11,class:"t-muted t-mono"},svg,v);}
+  [2,4,8,16,32].forEach(v=>{S("line",{x1:x(v),x2:x(v),y1:m.t,y2:Ht-m.b,class:"gridl"},svg);S("text",{x:x(v),y:Ht-m.b+18,"text-anchor":"middle","font-size":11,class:"t-muted t-mono"},svg,v+" s");});
+  S("line",{x1:m.l,x2:W-m.r,y1:Ht-m.b,y2:Ht-m.b,class:"axis"},svg);
+  S("text",{x:m.l+pw/2,y:Ht-10,"text-anchor":"middle","font-size":12,class:"t-muted"},svg,"Median latency per answer (s, log scale)");
+  S("text",{x:14,y:m.t+ph/2,"text-anchor":"middle","font-size":12,class:"t-muted",transform:"rotate(-90 14 "+(m.t+ph/2)+")"},svg,"Works+secure %");
+  const LBL={
+    "Reflection Beam 1.0":["end",-11,4],
+    "Gemini 3.8 Flash":["start",11,4],
+    "CyberNemo SFT + harness (ours)":["end",-16,4,"CyberNemo SFT + harness"],
+    "DeepSeek V4.1 Flash":["start",11,8],
+    "Kimi K2.7 Code*":["end",-11,-8],
+    "Gemini 3.5 Flash*":["end",-11,4],
+    "CyberNemo SFT (ours)":["start",12,4,"CyberNemo SFT"],
+    "Nemotron 120B base*":["start",12,4]};
+  const order=D.filter(d=>d.lat!=null).sort((a,b)=>(a.group==="frontier"?0:1)-(b.group==="frontier"?0:1));
+  order.forEach(d=>{
+    const g=S("g",{class:"pt",tabindex:0,role:"img","aria-label":d.name+": "+f1(d.ws)+" percent works+secure, "+f1(d.lat)+" seconds median latency"},svg);
+    const ours=d.group!=="frontier";
+    const cx=x(d.lat),cy=y(d.ws);
+    let c;
+    if(d.group==="ours2"){
+      S("circle",{cx,cy,r:11,fill:"none",class:"s-ours2","stroke-width":1.5,"stroke-dasharray":"3 2"},g);
+      c=S("circle",{cx,cy,r:7,class:"f-ours2",stroke:"var(--surface)","stroke-width":1.5},g);
+    }else{
+      c=S("circle",{cx,cy,r:ours?7:6,class:"f-"+d.group,stroke:"var(--surface)","stroke-width":1.5},g);
+    }
+    const L=LBL[d.name];
+    S("text",{x:cx+L[1],y:cy+L[2],"text-anchor":L[0],"font-size":12,"font-weight":ours?600:400,class:"halo"+(ours?"":" t-muted")},g,(L[3]||d.name)+" "+f1(d.ws));
+    S("circle",{cx,cy,r:14,fill:"transparent"},g);
+    bindTip(g,()=>c,()=>sysTip(d));
+  });
+  S("text",{x:m.l+8,y:m.t+14,"font-size":11,class:"t-muted"},svg,"\u2196 more secure, faster");
+})();
+})();
+</script>
+
+</body>
+</html>
