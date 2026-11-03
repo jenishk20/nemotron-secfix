@@ -271,7 +271,7 @@ footer p{margin:.2rem 0}
 <body>
 <div id="progress"></div>
 <nav class="dots" aria-label="Sections">
-  <a href="#urgency" aria-label="The urgency"></a><a href="#top" aria-label="Intro"></a><a href="#problem" aria-label="The problem"></a><a href="#tarslip" aria-label="Tar slip"></a><a href="#blocks" aria-label="Who blocks"></a><a href="#arch" aria-label="Architecture"></a><a href="#results" aria-label="Results"></a><a href="#exploit" aria-label="Exploitable code"></a>
+  <a href="#urgency" aria-label="The urgency"></a><a href="#top" aria-label="Intro"></a><a href="#problem" aria-label="The problem"></a><a href="#tarslip" aria-label="Tar slip"></a><a href="#arch" aria-label="Architecture"></a><a href="#results" aria-label="Results"></a><a href="#exploit" aria-label="Exploitable code"></a>
 </nav>
 
 <section class="urgency wrap" id="urgency" aria-labelledby="urgency-h">
@@ -351,16 +351,6 @@ footer p{margin:.2rem 0}
     </div>
   </div>
 
-</section>
-
-<section id="blocks">
-  <div class="ptitle rv">The Defense</div>
-  <h2 class="rv">Who blocks the attack?</h2>
-  <div class="card rv">
-    <p class="note">% of each system's answers that refuse the malicious archive</p>
-    <div class="ringgroup"><div class="rg-label">Nemotron → CyberNemo</div><div class="score" id="rings"></div></div>
-    <div class="ringgroup"><div class="rg-label">Frontier models</div><div class="score" id="rings2"></div></div>
-  </div>
 </section>
 
 <section id="arch">
@@ -552,18 +542,7 @@ document.getElementById("extract").addEventListener("click", extract);
 drawCode(); resetSim();
 onView(fs, () => setTimeout(extract, 300));
 
-// per-task rings (core/py/cwe_022_2, works + secure)
-const RINGS = [["Nemotron base", 0, "base"], ["CyberNemo SFT", 0, "sft"], ["CyberNemo + review", 100, "harn"],
-               ["Reflection Beam", 70, "frontier"], ["Gemini 3.8 Flash", 10, "frontier"], ["Kimi K2.7 Code", 0, "frontier"], ["MiniMax M3.1 Flash", 100, "frontier"]];
-const C = 2 * Math.PI * 46;
-function drawRings(id, rows){
-  const el = document.getElementById(id);
-  rows.forEach(([n, v, k]) => el.insertAdjacentHTML("beforeend",
-    `<div class="card sc${k === "harn" ? " ours" : ""}"><div class="ring"><svg width="110" height="110" viewBox="0 0 110 110"><circle class="bg" cx="55" cy="55" r="46"/><circle class="fg" cx="55" cy="55" r="46" stroke="var(--${k})" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-v="${v}"/></svg><b>${v}%</b></div><small>${n}</small></div>`));
-  onView(el, () => el.querySelectorAll(".fg").forEach((c, i) => setTimeout(() => c.style.strokeDashoffset = C * (1 - c.dataset.v / 100), i * 120)));
-}
-drawRings("rings", RINGS.slice(0, 3));
-drawRings("rings2", RINGS.slice(3));
+
 
 // architecture: one numbered flow
 const STEPS = [
