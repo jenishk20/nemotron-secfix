@@ -1,8 +1,7 @@
 """README charts as dependency-free SVG (light + dark), generated from results/.
 
 docs/img/method[-dark].svg              the pipeline (data factory -> Fireworks SFT -> review harness -> eval)
-docs/img/before_after[-dark].svg        base -> + fine-tune -> + review, with frontier reference lines
-docs/img/secure_rate[-dark].svg         works+secure by system
+docs/img/breakdown[-dark].svg           per system: share of answers that are secure / work but exploitable / broken
 docs/img/quality_vs_latency[-dark].svg  works+secure vs median latency (log scale)
 docs/img/per_language[-dark].svg        base vs CyberNemo vs CyberNemo + review, per language
 Usage: python scripts/make_charts.py
@@ -24,8 +23,6 @@ SYSTEMS = [
     ("Reflection Beam 1.0", "beam_n10", "other", "beam_speed", ""),
     ("Gemini 3.8 Flash", "gemini38flash_n10", "other", "gemini38flash_speed", ""),
     ("CyberNemo SFT + harness (ours)", REVIEW, "review", "sft120_think_v2_n10_thinkon_speed", "x2"),  # two thinking calls
-    ("DeepSeek V4.1 Flash", "dsv41flash_n10", "other", "dsv41flash_speed", ""),
-    ("Gemini 3.5 Flash", "gemini35flash_all_n5", "other", "gemini35flash", ""),
     ("CyberNemo SFT (ours)", SFT, "ours", "sft120_think_v2_n10_thinkon_speed", ""),
     ("MiniMax M3.1 Flash", "minimax31flash_n5", "other", None, ""),
     ("Kimi K2.7 Code", "kimik27code_n5_lstrip", "other", None, ""),
@@ -49,12 +46,6 @@ def latency(name):
 def svg(w, h, body, t, title):
     return (f"<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{h}' viewBox='0 0 {w} {h}' {FONT}>"
             f"<title>{title}</title><rect width='{w}' height='{h}' rx='8' fill='{t['bg']}'/>{body}</svg>")
-
-
-def hbar(x, y, w, h, fill):  # 4px rounded data end, square at the baseline
-    r = min(4, w / 2)
-    return (f"<path d='M{x},{y} H{x + w - r} Q{x + w},{y} {x + w},{y + r} V{y + h - r} "
-            f"Q{x + w},{y + h} {x + w - r},{y + h} H{x} Z' fill='{fill}'/>")
 
 
 def vbar(x, y0, y, w, fill):
@@ -102,49 +93,39 @@ def method(t):
     return svg(W, H, "".join(b), t, "CyberNemo: SFT fine-tune + security-review harness")
 
 
-def before_after(t):
-    stages = [("Nemotron 120B base", BASE, "base"), ("+ SFT fine-tune", SFT, "ours"), ("+ review harness", REVIEW, "review")]
-    refs = [("Reflection Beam", "beam_n10"), ("Gemini 3.8 Flash", "gemini38flash_n10"), ("DeepSeek V4.1 Flash", "dsv41flash_n10"), ("Gemini 3.5 Flash", "gemini35flash_all_n5")]
-    W, H, L, T, B = 820, 380, 56, 70, 74
-    sy = lambda v: T + (H - T - B) * (1 - (v - 40) / 50)
-    b = [title(t, "Before vs after: working AND secure code on CWEval (%)", "Thinking mode, same 100 held-out tasks; dashed lines = frontier models (default mode)")]
-    for v in range(40, 91, 10):
-        b.append(f"<line x1='{L}' y1='{sy(v)}' x2='{W - 190}' y2='{sy(v)}' stroke='{t['grid']}'/>"
-                 f"<text x='{L - 8}' y='{sy(v) + 4}' font-size='11' fill='{t['muted']}' text-anchor='end'>{v}</text>")
-    for name, run in refs:
-        v = rate(run)
-        b.append(f"<line x1='{L}' y1='{sy(v)}' x2='{W - 190}' y2='{sy(v)}' stroke='{t['muted']}' stroke-dasharray='5 4'/>"
-                 f"<text x='{W - 184}' y='{sy(v) + 4}' font-size='11' fill='{t['ink2']}'>{name} {v:.1f}</text>")
-    gw, bw = (W - 190 - L) / 3, 96
-    deltas = ["baseline", "+4.9 (95% CI +0.6 to +9.4)", "+8.9 (95% CI +1.7 to +16.3)"]
-    for i, (name, run, role) in enumerate(stages):
-        v, works = rate(run), rate(run, metric="func")
-        x = L + gw * i + (gw - bw) / 2
-        b.append(vbar(x, sy(40), sy(v), bw, t[role]))  # value inside the bar, so reference lines never cross it
-        b.append(f"<text x='{x + bw / 2}' y='{sy(v) + 22}' font-size='15' font-weight='700' fill='#ffffff' text-anchor='middle'>{v:.1f}</text>"
-                 f"<text x='{x + bw / 2}' y='{H - B + 18}' font-size='12' font-weight='600' fill='{t['ink']}' text-anchor='middle'>{name}</text>"
-                 f"<text x='{x + bw / 2}' y='{H - B + 35}' font-size='11' fill='{t['ink2']}' text-anchor='middle'>{deltas[i]}</text>"
-                 f"<text x='{x + bw / 2}' y='{H - B + 51}' font-size='11' fill='{t['muted']}' text-anchor='middle'>works {works:.1f}</text>")
-    return svg(W, H, "".join(b), t, "Before vs after")
-
-
-def secure_rate(t):
-    rows = sorted(((lbl, rate(run), role) for lbl, run, role, _, _ in SYSTEMS), key=lambda r: -r[1])
-    W, L, top, bh, gap = 780, 240, 54, 22, 12
-    H = top + len(rows) * (bh + gap) + 34
-    sx = lambda v: L + (W - L - 70) * v / 100
-    b = [title(t, "Working and secure code, CWEval (% of answers)")]
-    for v in range(0, 101, 20):
-        b.append(f"<line x1='{sx(v)}' y1='{top - 6}' x2='{sx(v)}' y2='{H - 28}' stroke='{t['grid']}'/>"
-                 f"<text x='{sx(v)}' y='{H - 12}' font-size='11' fill='{t['muted']}' text-anchor='middle'>{v}</text>")
-    for i, (lbl, v, role) in enumerate(rows):
+def breakdown(t):
+    """One stacked bar per system: of every 100 answers, how many are secure, work but are exploitable, or are broken."""
+    rows = []
+    for lbl, run, role, _, _ in SYSTEMS:
+        sec, works = rate(run), rate(run, metric="func")
+        rows.append((lbl, role, sec, works - sec, 100 - works))
+    rows.sort(key=lambda r: -r[2])
+    parts = [("Works and secure", "review"), ("Works, but exploitable", "base"), ("Broken", "other")]
+    W, L, top, bh, gap = 820, 250, 88, 24, 10
+    H = top + len(rows) * (bh + gap) + 30
+    sx = lambda v: L + (W - L - 30) * v / 100
+    b = [title(t, "Out of every 100 answers on CWEval: how many work AND resist the attack?",
+               "100 held-out tasks, thinking / default mode. Sorted by the green segment (the score).")]
+    for i, (lbl, role) in enumerate(parts):  # legend
+        x = 20 + i * 200
+        b.append(f"<rect x='{x}' y='58' width='12' height='12' rx='3' fill='{t[role]}'/>"
+                 f"<text x='{x + 18}' y='68' font-size='12' fill='{t['ink2']}'>{lbl}</text>")
+    for i, (lbl, role, sec, vuln, broken) in enumerate(rows):
         y = top + i * (bh + gap)
         mine = role in ("ours", "review")
         b.append(f"<text x='{L - 10}' y='{y + bh / 2 + 4}' font-size='13' fill='{t['ink'] if role != 'other' else t['ink2']}' "
-                 f"text-anchor='end' font-weight='{600 if mine else 400}'>{lbl}</text>")
-        b.append(hbar(L, y, sx(v) - L, bh, t[role]))
-        b.append(f"<text x='{sx(v) + 6}' y='{y + bh / 2 + 4}' font-size='12' fill='{t['ink']}'>{v:.1f}</text>")
-    return svg(W, H, "".join(b), t, "Working and secure code rate by system")
+                 f"text-anchor='end' font-weight='{700 if mine else 400}'>{lbl}</text>")
+        x = L
+        for v, (_, prole) in zip((sec, vuln, broken), parts):
+            w = sx(v) - L
+            b.append(f"<rect x='{x}' y='{y}' width='{w}' height='{bh}' fill='{t[prole]}'/>")
+            if w > 30:
+                fill = "#ffffff" if prole != "other" else t["ink"]
+                b.append(f"<text x='{x + w / 2}' y='{y + bh / 2 + 4}' font-size='12' font-weight='{700 if prole == 'review' else 400}' "
+                         f"fill='{fill}' text-anchor='middle'>{v:.0f}</text>")
+            x += w
+    b.append(f"<text x='{L}' y='{H - 10}' font-size='11' fill='{t['muted']}'>Bold = ours. Numbers are % of answers (CWEval pass@1).</text>")
+    return svg(W, H, "".join(b), t, "Secure, exploitable and broken answers by system")
 
 
 def quality_vs_latency(t):
@@ -168,7 +149,7 @@ def quality_vs_latency(t):
         b.append(f"<text x='{sx(s)}' y='{H - B + 18}' font-size='11' fill='{t['muted']}' text-anchor='middle'>{s:g} s</text>")
     b.append(f"<text x='{(L + W - R) / 2}' y='{H - 12}' font-size='12' fill='{t['ink2']}' text-anchor='middle'>median latency per answer (log scale)</text>"
              f"<text x='16' y='{(T + H - B) / 2}' font-size='12' fill='{t['ink2']}' text-anchor='middle' transform='rotate(-90 16 {(T + H - B) / 2})'>works + secure (%)</text>")
-    nudge = {"CyberNemo SFT + harness (ours) (2 calls, est.)": 3, "DeepSeek V4.1 Flash": 17,
+    nudge = {"CyberNemo SFT + harness (ours) (2 calls, est.)": 3,
              "CyberNemo, fast mode": -12, "Nemotron 120B base": 12}
     for lbl, s, v, role, hollow in pts:
         x, y = sx(s), sy(v)
@@ -205,7 +186,7 @@ def per_language(t):
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    for name, fn in (("method", method), ("before_after", before_after), ("secure_rate", secure_rate),
+    for name, fn in (("method", method), ("breakdown", breakdown),
                      ("quality_vs_latency", quality_vs_latency), ("per_language", per_language)):
         for mode, t in THEMES.items():
             path = os.path.join(OUT, f"{name}{'' if mode == 'light' else '-dark'}.svg")
