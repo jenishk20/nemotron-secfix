@@ -125,7 +125,7 @@ section h2,.hero h1{font-size:clamp(1.5rem,min(3.4vw,5vh),2.5rem);color:var(--fg
 .news-card small em{font-style:normal;color:var(--violet-2)}
 @media (prefers-reduced-motion:reduce){.ticker{overflow-x:auto}.track{animation:none}}
 /* problem cards */
-.why{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.why{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .why .card{transition:transform .3s,border-color .3s,box-shadow .3s;transform-style:preserve-3d}
 .why .card:hover{border-color:var(--violet);box-shadow:0 20px 50px -25px var(--violet)}
 .why .num{font-family:var(--mono);color:var(--violet);font-size:.95rem}
@@ -242,9 +242,7 @@ footer p{margin:.2rem 0}
 @media (max-width:860px){
   section{min-height:0;padding:9vh 0}
   .hero-grid,.sim{grid-template-columns:1fr}
-  .limits{grid-template-columns:1fr 1fr}
-  .why{gap:10px}
-  .why .card{padding:16px}
+  .why,.limits{grid-template-columns:1fr 1fr}
   .xrow,.rrow{grid-template-columns:120px 1fr 46px;font-size:.82rem}
 }
 @media (max-width:560px){.why,.limits{grid-template-columns:1fr}}
@@ -270,6 +268,20 @@ footer p{margin:.2rem 0}
   *,*::before,*::after{animation:none!important;transition:none!important}
   .rv{opacity:1;transform:none}
 }
+
+/* one slide layout everywhere: title block pinned at the same spot, same type sizes */
+section,.hero,.urgency{justify-content:flex-start;padding:11vh 0 5vh;gap:0}
+.hero-grid{align-items:start}
+.urgency{position:relative}
+.urgency .fw-pill{position:absolute;top:4vh}
+.ptitle,.urgency h1{font-size:clamp(2.8rem,min(6.4vw,9.5vh),5.2rem);font-weight:700;letter-spacing:-.035em;line-height:1.02;margin:0 0 1vh}
+section h2,.hero h1,#arch h2{font-size:clamp(1.5rem,min(3.4vw,5vh),2.5rem);font-weight:700;letter-spacing:-.02em;line-height:1.15;margin:0 0 3.5vh}
+section h2:has(+ .lede),.hero h1:has(+ .lede){margin-bottom:1.2vh}
+.lede,.urgency .lede{font-size:clamp(1.1rem,min(1.8vw,2.8vh),1.35rem);color:var(--muted);margin:0 0 3.5vh}
+.urgency .lede{margin-bottom:3vh}
+.closing{justify-content:center;padding:5vh 0}
+.close-t{margin:0}
+@media (max-width:860px){section,.hero,.urgency{padding:9vh 0 5vh}}
 </style>
 </head>
 <body>
