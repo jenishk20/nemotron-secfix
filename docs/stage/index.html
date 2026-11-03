@@ -84,6 +84,10 @@ section{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;ju
 @keyframes wheel{to{transform:translateY(9px);opacity:0}}
 
 
+/* page titles: same voice as "The Urgency" on every page; the existing h2/h1 becomes the subtitle */
+.ptitle{font-weight:700;letter-spacing:-.035em;line-height:1.02;font-size:clamp(2.8rem,min(6.4vw,9.5vh),5.2rem);background:linear-gradient(90deg,var(--fg) 0%,var(--violet-2) 45%,var(--violet) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:.6vh}
+section h2,.hero h1{font-size:clamp(1.5rem,min(3.4vw,5vh),2.5rem);color:var(--fg)}
+#arch h2{font-size:clamp(1.5rem,min(3.4vw,5vh),2.5rem)}
 /* "The Urgency" opening page: static wall of real headlines */
 .urgency{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;gap:2.4vh;padding:6vh 0 4vh;scroll-snap-align:start}
 .fw-pill{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
@@ -286,7 +290,7 @@ footer p{margin:.2rem 0}
 <header class="hero" id="top">
   <div class="wrap hero-grid">
     <div>
-      <div class="eyebrow rv">CyberNemo · Fireworks Deploy hackathon</div>
+      <div class="ptitle rv">The Gap</div>
       <h1 class="rv d1">AI writes code that <span class="grad">works.</span><br>Attackers love that.</h1>
       <p class="lede rv d2">Models pass your tests, not an attacker's. CyberNemo fixes that.</p>
       <div class="stats-title rv d3">Code that works <b>and</b> survives the attack · CWEval, 100 tasks</div>
@@ -307,7 +311,7 @@ footer p{margin:.2rem 0}
 <main class="wrap">
 
 <section id="problem">
-  <div class="eyebrow rv">01 · The problem</div>
+  <div class="ptitle rv">The Problem</div>
   <h2 class="rv">Why vulnerabilities slip through</h2>
   <div class="why">
     <div class="card rv tilt"><div class="num">01</div><h3>Works ≠ safe</h3><p>Tests use normal input, never attacks.</p></div>
@@ -318,7 +322,7 @@ footer p{margin:.2rem 0}
 </section>
 
 <section id="tarslip">
-  <div class="eyebrow rv">02 · A real benchmark task</div>
+  <div class="ptitle rv">The Attack</div>
   <h2 class="rv">File injection: the “tar slip”</h2>
   <p class="lede rv"><em>“Extract the tar file into dest; return True on success.”</em> No word about security.</p>
 
@@ -350,7 +354,7 @@ footer p{margin:.2rem 0}
 </section>
 
 <section id="blocks">
-  <div class="eyebrow rv">02 · Tar slip results</div>
+  <div class="ptitle rv">The Defense</div>
   <h2 class="rv">Who blocks the attack?</h2>
   <div class="card rv">
     <p class="note">% of each system's answers that refuse the malicious archive</p>
@@ -360,7 +364,7 @@ footer p{margin:.2rem 0}
 </section>
 
 <section id="arch">
-  <div class="eyebrow rv">03 · The solution</div>
+  <div class="ptitle rv">The Solution</div>
   <h2 class="rv">CyberNemo: how it works</h2>
   <p class="lede rv">Ultra writes the exam. The 120B learns from its own passing answers, then reviews its work.</p>
   <div class="phases rv">
@@ -370,7 +374,7 @@ footer p{margin:.2rem 0}
 </section>
 
 <section id="results">
-  <div class="eyebrow rv">04 · Results</div>
+  <div class="ptitle rv">The Benchmark</div>
   <h2 class="rv">From last place to the frontier pack</h2>
   <p class="lede rv"><b>58.4 → 72.4</b> · on par with Beam and Gemini 3.8 Flash</p>
   <div class="card rv">
@@ -384,7 +388,7 @@ footer p{margin:.2rem 0}
 </section>
 
 <section id="exploit">
-  <div class="eyebrow rv">04 · Results</div>
+  <div class="ptitle rv">The Impact</div>
   <h2 class="rv">Least exploitable code of any system</h2>
   <div class="card rv">
     <h3>Code that works but can be exploited</h3>
