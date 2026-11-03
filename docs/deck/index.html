@@ -9,12 +9,12 @@
 <style>
 /* Layout: one full-viewport slide at a time, dark "security console" look, big type, sized for half a screen */
 :root{
-  --bg:#0b0618; --panel:#170d33; --line:#3a2470; --fg:#f4f0ff; --muted:#b3a6dc;
-  --base:#f2a23a; --sft:#5aaeef; --harn:#a77bff; --frontier:#6c6688; --violet:#8b5cf6;
-  --fail:#ff7b71; --fail-bg:#2e1513; --pass:#5dc97b; --pass-bg:#10291a;
+  --bg:#fbf9ff; --panel:#ffffff; --line:#e3daf9; --fg:#170f33; --muted:#5d557d;
+  --base:#d9730d; --sft:#1f6fd1; --harn:#7c3aed; --frontier:#b1abc6; --violet:#7c3aed;
+  --fail:#c0262d; --fail-bg:#fde7e7; --pass:#137a3a; --pass-bg:#e2f5e8;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  color-scheme:dark;
+  color-scheme:light;
 }
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);overflow:hidden;font-variant-numeric:tabular-nums}
@@ -23,10 +23,10 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);overf
   padding-inline:max(5vw,16px)}
 .slide[hidden]{display:none}
 .kicker{font-family:var(--mono);font-size:clamp(11px,1.6vh,16px);letter-spacing:.12em;text-transform:uppercase;color:var(--harn)}
-body{background:radial-gradient(1100px 620px at 90% -12%,rgba(124,58,237,.55) 0%,transparent 62%),radial-gradient(900px 520px at -10% 115%,rgba(91,33,182,.45) 0%,transparent 60%),var(--bg)}
-h1{background:linear-gradient(90deg,#ffffff 0%,#d8c6ff 55%,#a77bff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.nav button{border-color:var(--violet)!important}.nav button:hover{background:var(--violet)!important}
-.stat,.part,pre{box-shadow:0 0 0 1px rgba(139,92,246,.18),0 18px 40px -24px rgba(124,58,237,.6)}
+body{background:radial-gradient(1100px 620px at 92% -14%,rgba(124,58,237,.16) 0%,transparent 62%),radial-gradient(900px 520px at -10% 115%,rgba(168,85,247,.12) 0%,transparent 60%),var(--bg)}
+h1{background:linear-gradient(90deg,#170f33 0%,#4c1d95 55%,#7c3aed 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav button{border-color:var(--violet)!important}.nav button:hover{background:var(--violet)!important;color:#fff!important}
+.stat,.part,pre{box-shadow:0 0 0 1px rgba(124,58,237,.10),0 14px 32px -22px rgba(76,29,149,.35)}
 h1{font-family:var(--mono);font-weight:700;font-size:clamp(26px,6vh,64px);line-height:1.05;margin:0;letter-spacing:-.02em;text-wrap:balance}
 h2{font-weight:600;font-size:clamp(20px,4.2vh,44px);line-height:1.12;margin:0;text-wrap:balance}
 p{margin:0;font-size:clamp(14px,2.3vh,24px);line-height:1.45;color:var(--fg);max-width:52ch}
@@ -38,14 +38,15 @@ p{margin:0;font-size:clamp(14px,2.3vh,24px);line-height:1.45;color:var(--fg);max
 .badge{display:inline-block;font-family:var(--mono);font-weight:700;font-size:clamp(11px,1.6vh,16px);padding:.3vh .7vw;border-radius:5px;letter-spacing:.04em}
 .fail{color:var(--fail);background:var(--fail-bg)} .pass{color:var(--pass);background:var(--pass-bg)}
 .src{font-size:clamp(11px,1.6vh,15px);color:var(--muted)} .src a{color:var(--sft)}
-pre{margin:0;background:#07050f;border:1px solid var(--line);border-radius:10px;padding:2vh 1.6vw;font-family:var(--mono);
+pre{margin:0;background:#f7f4ff;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:2vh 1.6vw;font-family:var(--mono);
   font-size:clamp(11px,2vh,21px);line-height:1.5;overflow:auto;white-space:pre}
 .bad{background:var(--fail-bg);display:inline-block;width:100%}
 .good{background:var(--pass-bg);display:inline-block;width:100%}
 .c{color:var(--muted)}
-.fig{margin:0;min-width:0}.fig img{display:block;width:100%;height:auto;max-height:52vh;object-fit:contain;border-radius:10px;background:#ffffff}.fig figcaption{margin-top:.8vh;font-size:clamp(11px,1.6vh,15px);color:var(--muted)}
+.fig{margin:0;min-width:0}.fig img{display:block;width:100%;height:auto;max-height:52vh;object-fit:contain;border-radius:10px;background:#ffffff;border:1px solid var(--line)}.fig figcaption{margin-top:.8vh;font-size:clamp(11px,1.6vh,15px);color:var(--muted)}
 .news{display:grid;grid-template-columns:1fr 1fr;gap:1.6vh 1.4vw;align-items:start}.news .fig img{max-height:30vh}
 @media (max-width:700px){.news{grid-template-columns:1fr}}
+.bench{font-size:clamp(12px,1.9vh,19px);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--violet);border-radius:8px;padding:1.1vh 1vw;max-width:110ch}.bench b{color:var(--fg)}
 .attack{font-family:var(--mono);font-size:clamp(12px,2vh,20px)}
 .attack code{color:var(--fail)}
 /* charts */
@@ -66,7 +67,7 @@ svg text{font-family:var(--sans);fill:var(--fg)}
 .nav button{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.6vh 1vw;cursor:pointer}
 .nav button:focus-visible{outline:2px solid var(--sft);outline-offset:2px}
 .dots{display:flex;gap:6px}.dots span{width:8px;height:8px;border-radius:50%;background:var(--line)}.dots span.on{background:var(--violet)}
-.brand{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:.7vw;flex-wrap:wrap;padding:calc(1.8vh + env(safe-area-inset-top,0px)) max(5vw,16px) 1.4vh;font-family:var(--mono);font-size:clamp(11px,1.8vh,18px);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(11,6,24,.92),rgba(11,6,24,.6))}
+.brand{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:.7vw;flex-wrap:wrap;padding:calc(1.8vh + env(safe-area-inset-top,0px)) max(5vw,16px) 1.4vh;font-family:var(--mono);font-size:clamp(11px,1.8vh,18px);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(251,249,255,.96),rgba(251,249,255,.75))}
 .brand .ev{color:#fff;font-weight:700;padding:.3vh .7vw;border-radius:5px;background:linear-gradient(90deg,#7c3aed,#a855f7)}
 .brand .pn{color:var(--harn);font-weight:700}.brand .sep{color:var(--muted)}.brand .sub{margin-left:auto;color:var(--muted);font-size:.85em}
 .slide{padding-top:max(11vh,64px)!important}
@@ -122,9 +123,10 @@ function read_file_from_dir(filename, dir_path) {
   <div class="attack"><span class="badge pass">ATTACK TEST: PASS</span> &nbsp;<code style="color:var(--pass)">"../as.txt"</code> is refused. Unedited model output.</div>
 </section>
 
-<section class="slide" id="s4" hidden data-note="Across all 100 held-out tasks: base Nemotron writes working, secure code 58.4% of the time. Fine-tuning takes it to 63.3; the review harness to 72.4. A 14-point jump, statistically significant.">
+<section class="slide" id="s4" hidden data-note="We measure on CWEval, a benchmark from Columbia University (LLM4Code at ICSE 2025): 100 human-written tasks, each run against functionality and attack tests. Across all 100 held-out tasks: base Nemotron writes working, secure code 58.4% of the time. Fine-tuning takes it to 63.3; the review harness to 72.4. A 14-point jump, statistically significant.">
   <div class="kicker">CyberNemo · the jump on 100 held-out CWEval tasks</div>
   <h2>58.4% → 72.4% working and secure code</h2>
+  <div class="bench"><b>Benchmark: CWEval</b> · Columbia University, LLM4Code @ ICSE 2025 · 100 held-out, human-written coding tasks in C, C++, JavaScript and Python · every answer is run against functionality tests <b>and</b> attack tests · never used for training</div>
   <svg viewBox="0 0 900 430" role="img" aria-label="Base 58.4, plus SFT 63.3, plus review harness 72.4">
     <g id="ladder"></g>
   </svg>
@@ -174,12 +176,11 @@ const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim
 (function(){
   const g=document.getElementById("ladder"),L=70,R=760,T=20,B=360,lo=50,hi=80,y=v=>T+(hi-v)/(hi-lo)*(B-T);
   for(let v=lo;v<=hi;v+=10){S("line",{x1:L,x2:R,y1:y(v),y2:y(v),stroke:css("--line")},g);S("text",{x:L-10,y:y(v)+5,"text-anchor":"end","font-size":15,class:"t-m mono"},g,v);}
-  [["Gemini 3.8 Flash 74.3",74.3],["DeepSeek V4.1 Flash 71.3",71.3]].forEach(([n,v])=>{S("line",{x1:L,x2:R,y1:y(v),y2:y(v),stroke:css("--frontier"),"stroke-dasharray":"6 5","stroke-width":1.5},g);S("text",{x:R+8,y:y(v)+5,"font-size":14,class:"t-m"},g,n);});
   const st=[["Nemotron base",58.4,"--base",""],["CyberNemo SFT",63.3,"--sft","+4.9"],["CyberNemo SFT + harness",72.4,"--harn","+8.9"]];
   const bw=150,gap=(R-L)/3;
   st.forEach(([n,v,c,d],i)=>{const x=L+gap*i+(gap-bw)/2;
     S("rect",{x,y:y(v),width:bw,height:B-y(v),rx:6,fill:css(c)},g);
-    S("text",{x:x+bw/2,y:y(v)+36,"text-anchor":"middle","font-size":30,"font-weight":700,class:"mono",style:"fill:#0a0718"},g,v.toFixed(1));
+    S("text",{x:x+bw/2,y:y(v)+36,"text-anchor":"middle","font-size":30,"font-weight":700,class:"mono",style:"fill:#ffffff"},g,v.toFixed(1));
     S("text",{x:x+bw/2,y:B+30,"text-anchor":"middle","font-size":17,"font-weight":600},g,n);
     if(d)S("text",{x:x+bw/2,y:B+56,"text-anchor":"middle","font-size":16,"font-weight":700,class:"mono",style:"fill:"+css(c)},g,d);});
 })();
