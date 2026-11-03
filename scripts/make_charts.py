@@ -1,7 +1,7 @@
 """README charts as dependency-free SVG (light + dark), generated from results/.
 
 docs/img/method[-dark].svg              the pipeline (data factory -> Fireworks SFT -> review harness -> eval)
-docs/img/breakdown[-dark].svg           per system: share of answers that are secure / work but exploitable / broken
+docs/img/breakdown[-dark].svg           works+secure by system, with the base -> SFT -> harness gains
 docs/img/quality_vs_latency[-dark].svg  works+secure vs median latency (log scale)
 docs/img/per_language[-dark].svg        base vs CyberNemo vs CyberNemo + review, per language
 Usage: python scripts/make_charts.py
@@ -94,38 +94,33 @@ def method(t):
 
 
 def breakdown(t):
-    """One stacked bar per system: of every 100 answers, how many are secure, work but are exploitable, or are broken."""
-    rows = []
-    for lbl, run, role, _, _ in SYSTEMS:
-        sec, works = rate(run), rate(run, metric="func")
-        rows.append((lbl, role, sec, works - sec, 100 - works))
-    rows.sort(key=lambda r: -r[2])
-    parts = [("Works and secure", "review"), ("Works, but exploitable", "base"), ("Broken", "other")]
-    W, L, top, bh, gap = 820, 250, 88, 24, 10
-    H = top + len(rows) * (bh + gap) + 30
-    sx = lambda v: L + (W - L - 30) * v / 100
-    b = [title(t, "Out of every 100 answers on CWEval: how many work AND resist the attack?",
-               "100 held-out tasks, thinking / default mode. Sorted by the green segment (the score).")]
-    for i, (lbl, role) in enumerate(parts):  # legend
-        x = 20 + i * 200
-        b.append(f"<rect x='{x}' y='58' width='12' height='12' rx='3' fill='{t[role]}'/>"
-                 f"<text x='{x + 18}' y='68' font-size='12' fill='{t['ink2']}'>{lbl}</text>")
-    for i, (lbl, role, sec, vuln, broken) in enumerate(rows):
+    """Ranked works+secure per system; ours highlighted, with the base -> SFT -> harness gains marked on the right."""
+    rows = sorted(((lbl, rate(run), role) for lbl, run, role, _, _ in SYSTEMS), key=lambda r: -r[1])
+    W, L, top, bh, gap = 820, 250, 64, 26, 10
+    H = top + len(rows) * (bh + gap) + 34
+    R = 150  # right margin for the gain bracket
+    sx = lambda v: L + (W - L - R - 40) * v / 100
+    b = [title(t, "Working AND secure code on CWEval (% of answers, higher is better)",
+               "100 held-out tasks. Orange = base model, blue/green = ours, grey = frontier models.")]
+    for v in range(0, 101, 25):
+        b.append(f"<line x1='{sx(v)}' y1='{top - 6}' x2='{sx(v)}' y2='{H - 30}' stroke='{t['grid']}'/>"
+                 f"<text x='{sx(v)}' y='{H - 14}' font-size='11' fill='{t['muted']}' text-anchor='middle'>{v}</text>")
+    ys = {}
+    for i, (lbl, v, role) in enumerate(rows):
         y = top + i * (bh + gap)
-        mine = role in ("ours", "review")
-        b.append(f"<text x='{L - 10}' y='{y + bh / 2 + 4}' font-size='13' fill='{t['ink'] if role != 'other' else t['ink2']}' "
-                 f"text-anchor='end' font-weight='{700 if mine else 400}'>{lbl}</text>")
-        x = L
-        for v, (_, prole) in zip((sec, vuln, broken), parts):
-            w = sx(v) - L
-            b.append(f"<rect x='{x}' y='{y}' width='{w}' height='{bh}' fill='{t[prole]}'/>")
-            if w > 30:
-                fill = "#ffffff" if prole != "other" else t["ink"]
-                b.append(f"<text x='{x + w / 2}' y='{y + bh / 2 + 4}' font-size='12' font-weight='{700 if prole == 'review' else 400}' "
-                         f"fill='{fill}' text-anchor='middle'>{v:.0f}</text>")
-            x += w
-    b.append(f"<text x='{L}' y='{H - 10}' font-size='11' fill='{t['muted']}'>Bold = ours. Numbers are % of answers (CWEval pass@1).</text>")
-    return svg(W, H, "".join(b), t, "Secure, exploitable and broken answers by system")
+        ys[role] = y + bh / 2
+        mine = role in ("ours", "review", "base")
+        b.append(f"<text x='{L - 10}' y='{y + bh / 2 + 4}' font-size='13' fill='{t['ink'] if mine else t['ink2']}' "
+                 f"text-anchor='end' font-weight='{700 if role in ('ours', 'review') else 400}'>{lbl}</text>")
+        b.append(f"<rect x='{L}' y='{y}' width='{sx(v) - L}' height='{bh}' rx='4' fill='{t[role]}'/>"
+                 f"<text x='{sx(v) + 6}' y='{y + bh / 2 + 4}' font-size='13' font-weight='{700 if mine else 400}' fill='{t['ink']}'>{v:.1f}</text>")
+    bx = sx(82)
+    for (a, c, txt) in (("base", "ours", "+4.9 SFT"), ("ours", "review", "+8.9 review")):
+        y1, y2 = ys[a], ys[c]
+        b.append(f"<path d='M{bx},{y1} H{bx + 10} V{y2 + 4} M{bx + 4},{y2 + 10} L{bx + 10},{y2 + 3} L{bx + 16},{y2 + 10}' "
+                 f"fill='none' stroke='{t[c]}' stroke-width='2'/>"
+                 f"<text x='{bx + 18}' y='{(y1 + y2) / 2 + 4}' font-size='12' font-weight='600' fill='{t[c]}'>{txt}</text>")
+    return svg(W, H, "".join(b), t, "Working and secure code by system")
 
 
 def quality_vs_latency(t):
@@ -151,6 +146,11 @@ def quality_vs_latency(t):
              f"<text x='16' y='{(T + H - B) / 2}' font-size='12' fill='{t['ink2']}' text-anchor='middle' transform='rotate(-90 16 {(T + H - B) / 2})'>works + secure (%)</text>")
     nudge = {"CyberNemo SFT + harness (ours) (2 calls, est.)": 3,
              "CyberNemo, fast mode": -12, "Nemotron 120B base": 12}
+    path = {role: (sx(s), sy(v)) for lbl, s, v, role, hollow in pts if not hollow and role in ("base", "ours", "review")}
+    for a, c, txt, dx, dy in (("base", "ours", "+4.9 SFT", -10, -18), ("ours", "review", "+8.9 review", 12, 6)):
+        (x1, y1), (x2, y2) = path[a], path[c]
+        b.append(f"<line x1='{x1}' y1='{y1}' x2='{x2}' y2='{y2}' stroke='{t[c]}' stroke-width='2' stroke-dasharray='3 4'/>"
+                 f"<text x='{(x1 + x2) / 2 + dx}' y='{(y1 + y2) / 2 + dy}' font-size='12' font-weight='600' fill='{t[c]}'>{txt}</text>")
     for lbl, s, v, role, hollow in pts:
         x, y = sx(s), sy(v)
         b.append(f"<circle cx='{x}' cy='{y}' r='6' fill='{t['bg'] if hollow else t[role]}' stroke='{t[role] if hollow else t['bg']}' stroke-width='2'/>")

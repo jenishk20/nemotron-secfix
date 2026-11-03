@@ -9,11 +9,11 @@ write secure code by default, plus a **security-review harness**. It runs on you
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/breakdown-dark.svg">
-  <img alt="Share of answers that are secure, work but are exploitable, or are broken, per system" src="docs/img/breakdown.svg" width="820">
+  <img alt="Working and secure code by system: base 58.4, SFT 63.3, SFT + harness 72.4, frontier 62.0 to 76.2" src="docs/img/breakdown.svg" width="820">
 </picture>
 
-The orange segment is the problem: code that **works but can be exploited**. Base Nemotron writes it
-in 28% of answers; CyberNemo + review in 9%, the lowest of any system tested.
+Fine-tuning adds **+4.9** and the review harness another **+8.9**, taking the open model from below
+every frontier model to within 2–4 points of the best two.
 
 ## What a task looks like
 The model gets a function stub and docstring and writes the body. It scores only if the code
