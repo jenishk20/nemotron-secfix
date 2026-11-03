@@ -46,6 +46,7 @@ pre{margin:0;background:#f7f4ff;color:var(--fg);border:1px solid var(--line);bor
 .fig{margin:0;min-width:0}.fig img{display:block;width:100%;height:auto;max-height:52vh;object-fit:contain;border-radius:10px;background:#ffffff;border:1px solid var(--line)}.fig figcaption{margin-top:.8vh;font-size:clamp(11px,1.6vh,15px);color:var(--muted)}
 .news{display:grid;grid-template-columns:1fr 1fr;gap:1.6vh 1.4vw;align-items:start}.news .fig img{max-height:30vh}
 @media (max-width:700px){.news{grid-template-columns:1fr}}
+.closer{font-family:var(--mono);font-weight:700;font-size:clamp(16px,3.2vh,34px);line-height:1.2;color:var(--violet);margin-top:1vh;text-wrap:balance}
 .bench{font-size:clamp(12px,1.9vh,19px);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--violet);border-radius:8px;padding:1.1vh 1vw;max-width:110ch}.bench b{color:var(--fg)}
 .attack{font-family:var(--mono);font-size:clamp(12px,2vh,20px)}
 .attack code{color:var(--fail)}
@@ -126,7 +127,7 @@ function read_file_from_dir(filename, dir_path) {
 <section class="slide" id="s4" hidden data-note="We measure on CWEval, a benchmark from Columbia University (LLM4Code at ICSE 2025): 100 human-written tasks, each run against functionality and attack tests. Across all 100 held-out tasks: base Nemotron writes working, secure code 58.4% of the time. Fine-tuning takes it to 63.3; the review harness to 72.4. A 14-point jump, statistically significant.">
   <div class="kicker">CyberNemo · the jump on 100 held-out CWEval tasks</div>
   <h2>58.4% → 72.4% working and secure code</h2>
-  <div class="bench"><b>Benchmark: CWEval</b> · Columbia University, LLM4Code @ ICSE 2025 · 100 held-out, human-written coding tasks in C, C++, JavaScript and Python · every answer is run against functionality tests <b>and</b> attack tests · never used for training</div>
+  <div class="bench"><b>Benchmark: CWEval</b> · Columbia University, LLM4Code @ ICSE 2025 · 100 held-out, human-written coding tasks in C, C++, JavaScript and Python · every answer is run against functionality tests <b>and</b> attack tests</div>
   <svg viewBox="0 0 900 430" role="img" aria-label="Base 58.4, plus SFT 63.3, plus review harness 72.4">
     <g id="ladder"></g>
   </svg>
@@ -148,13 +149,14 @@ function read_file_from_dir(filename, dir_path) {
   <p class="muted" style="font-size:clamp(12px,1.9vh,19px)">No frontier-model outputs used in training. Every answer verified in an offline sandbox.</p>
 </section>
 
-<section class="slide" id="s6" hidden data-note="How it stands: third of eight, statistically on par with the top frontier models, ahead of DeepSeek, Kimi and Gemini 3.5 Flash. An open model you can run on your own infrastructure.">
+<section class="slide" id="s6" hidden data-note="How it stands: third of eight, statistically on par with the top frontier models, ahead of DeepSeek, Kimi and Gemini 3.5 Flash. An open model you can run on your own infrastructure. Let's secure our systems before the next cyberattack.">
   <div class="kicker">CyberNemo vs frontier models · same 100 tasks</div>
   <h2>CyberNemo: 3rd of 8, on par with the frontier</h2>
   <svg viewBox="0 0 900 470" role="img" aria-label="Ranked works plus secure scores for eight systems and the base model">
     <g id="rank"></g>
   </svg>
   <div class="src">Works + secure %, CWEval. CyberNemo vs top models: differences not statistically significant (95% CIs include 0). Tradeoff: 5–10 points lower functionality.</div>
+  <div class="closer">CyberNemo: let's secure our systems before the next cyberattack.</div>
 </section>
 
 <header class="brand"><span class="ev">Fireworks Deploy</span><span class="sep">·</span><span class="pn">CyberNemo</span><span class="sub">NVIDIA Nemotron on Fireworks AI</span></header>
