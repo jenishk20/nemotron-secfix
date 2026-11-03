@@ -90,10 +90,11 @@ section{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;ju
 .fw-pill b{color:#fff;font-weight:700;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,var(--violet-2),var(--violet))}
 .urgency h1{font-size:clamp(3rem,min(8vw,11vh),6.4rem);letter-spacing:-.04em;background:linear-gradient(90deg,var(--fg) 0%,var(--violet-2) 45%,var(--violet) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .urgency .lede{margin-top:0;color:var(--fg);font-size:clamp(1.15rem,min(2vw,3vh),1.5rem)}
-.shots{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;align-items:stretch}
+.shots{display:grid;grid-template-columns:2.3fr 1fr;gap:16px;align-items:start}
 .shots .col{display:grid;gap:16px;min-width:0}
 .shot{margin:0;background:var(--solid);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 22px 50px -30px rgba(91,33,182,.45);display:flex;flex-direction:column;min-width:0}
 .shot img{display:block;width:100%;height:auto;max-height:44vh;object-fit:contain;background:#fff}
+.shot.big img{max-height:66vh}  /* the CVE chart gets most of the page */
 .shot figcaption{font-family:var(--mono);font-size:.76rem;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line)}
 .headlines{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .headlines .news-card{flex:none}
@@ -274,13 +275,12 @@ footer p{margin:.2rem 0}
   <h1 id="urgency-h">The Urgency</h1>
   <p class="lede">AI is finding and exploiting bugs faster than ever, and more of the code those bugs live in is written by AI.</p>
   <div class="shots">
-    <figure class="shot"><img src="img/epoch-cves.png" alt="Line chart: critical and high-severity CVEs from 21 notable organizations, 2022 to 2026, rising sharply in 2026"><figcaption>Critical and high-severity CVEs from 21 notable organizations · Epoch AI (epoch.ai), CC-BY</figcaption></figure>
+    <figure class="shot big"><img src="img/epoch-cves.png" alt="Line chart: critical and high-severity CVEs from 21 notable organizations, 2022 to 2026, rising sharply in 2026"><figcaption>Critical and high-severity CVEs from 21 notable organizations · Epoch AI (epoch.ai), CC-BY</figcaption></figure>
     <div class="col">
       <figure class="shot"><img src="img/wordpress-rce.webp" alt="Headline: WordPress RCE flaw draws nearly 63,000 attack attempts in just 24 hours"><figcaption>The Hacker News · Oct 30, 2026</figcaption></figure>
       <figure class="shot"><img src="img/news-top-stories.png" alt="News results: PHP2Shell and AI put half the internet on edge; critical vulnerabilities in PHP require immediate patching"><figcaption>This week's top stories · IEEE Spectrum, BBC, Unit 42, CISA</figcaption></figure>
     </div>
   </div>
-  <div class="headlines" id="newsGrid" aria-label="Recent real attacks, linked to their coverage"></div>
 </section>
 
 <header class="hero" id="top">
@@ -498,8 +498,6 @@ const NEWS = [
   {tag: "SQL injection", date: "2023", src: "Help Net Security", url: "https://www.helpnetsecurity.com/2023/09/26/moveit-victim-number/",
    t: "MOVEit SQL injection: 2,000+ organisations breached", d: "Data of 60M+ people stolen by Cl0p.", rel: ""},
 ];
-const cardHTML = n => `<a class="news-card" href="${n.url}" target="_blank" rel="noopener noreferrer"><span class="meta"><span class="tag">${n.tag}</span><span>${n.src} · ${n.date}</span></span><b>${n.t}</b><small>${n.d}</small></a>`;
-document.getElementById("newsGrid").innerHTML = NEWS.map(cardHTML).join("");  // static grid on "The Urgency" page
 
 // works-but-exploitable bars
 const XB = [["Nemotron 120B base", 28.0, "base"], ["CyberNemo SFT", 22.9, "sft"], ["Kimi K2.7 Code", 20.8, "frontier"], ["MiniMax M3.1 Flash", 20.4, "frontier"],
