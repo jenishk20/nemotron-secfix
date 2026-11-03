@@ -88,13 +88,6 @@ section{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;ju
 .ptitle{font-weight:700;letter-spacing:-.035em;line-height:1.02;font-size:clamp(2.8rem,min(6.4vw,9.5vh),5.2rem);background:linear-gradient(90deg,var(--fg) 0%,var(--violet-2) 45%,var(--violet) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:.6vh}
 section h2,.hero h1{font-size:clamp(1.5rem,min(3.4vw,5vh),2.5rem);color:var(--fg)}
 #arch h2{font-size:clamp(1.5rem,min(3.4vw,5vh),2.5rem)}
-.impact{text-align:center;padding:clamp(24px,5vh,48px)!important}
-.imp-row{display:flex;justify-content:center;align-items:center;gap:clamp(18px,4vw,56px);flex-wrap:wrap}
-.imp-n{display:block;font-family:var(--mono);font-weight:700;font-size:clamp(3.4rem,min(9vw,13vh),7rem);line-height:1}
-.imp-n.base{color:var(--base)} .imp-n.ours{background:linear-gradient(90deg,var(--violet-2),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
-.imp-l{display:block;margin-top:8px;font-size:1.05rem;color:var(--muted)}
-.imp-arrow{font-size:clamp(2.4rem,min(6vw,9vh),4.6rem);color:var(--muted)}
-.imp-cap{margin:2.4vh auto 0;max-width:56ch;font-size:clamp(1.05rem,min(1.8vw,2.8vh),1.35rem);color:var(--fg)}
 .closing{align-items:center;text-align:center}
 .close-t{font-size:clamp(3.4rem,min(10vw,15vh),8rem)!important}
 /* "The Urgency" opening page: static wall of real headlines */
@@ -280,7 +273,7 @@ footer p{margin:.2rem 0}
 <body>
 <div id="progress"></div>
 <nav class="dots" aria-label="Sections">
-  <a href="#urgency" aria-label="The urgency"></a><a href="#top" aria-label="Intro"></a><a href="#problem" aria-label="The problem"></a><a href="#tarslip" aria-label="Tar slip"></a><a href="#arch" aria-label="Architecture"></a><a href="#results" aria-label="Results"></a><a href="#exploit" aria-label="The impact"></a><a href="#close" aria-label="Closing"></a>
+  <a href="#urgency" aria-label="The urgency"></a><a href="#top" aria-label="Intro"></a><a href="#problem" aria-label="The problem"></a><a href="#tarslip" aria-label="Tar slip"></a><a href="#arch" aria-label="Architecture"></a><a href="#results" aria-label="Results"></a><a href="#exploit" aria-label="Exploitable code"></a><a href="#close" aria-label="Closing"></a>
 </nav>
 
 <section class="urgency wrap" id="urgency" aria-labelledby="urgency-h">
@@ -389,13 +382,10 @@ footer p{margin:.2rem 0}
 <section id="exploit">
   <div class="ptitle rv">The Impact</div>
   <h2 class="rv">Least exploitable code of any system</h2>
-  <div class="card rv impact">
-    <div class="imp-row">
-      <div><span class="imp-n base">28%</span><span class="imp-l">Nemotron 120B base</span></div>
-      <div class="imp-arrow" aria-hidden="true">→</div>
-      <div><span class="imp-n ours">9%</span><span class="imp-l">CyberNemo + review</span></div>
-    </div>
-    <p class="imp-cap">of answers are code that <b>works but can be hacked</b>. CyberNemo's 9% is the lowest of every system we tested.</p>
+  <div class="card rv">
+    <h3>Code that works but can be exploited</h3>
+    <p class="note">% of answers on CWEval · lower is better</p>
+    <div class="xbars" id="xbars2"></div>
   </div>
   <div class="limits">
     <div class="card rv"><h3>Works 81%</h3><p>6–8 points below top frontier models.</p></div>
@@ -508,7 +498,7 @@ function drawX(id, rows){
     `<div class="xrow${k === "harn" || k === "sft" ? " ours" : ""}"><span>${n}</span><div class="tr"><div class="fl" style="background:var(--${k})" data-w="${v / 30 * 100}"></div></div><span class="v">${v.toFixed(1)}%</span></div>`));
   onView(el, () => el.querySelectorAll(".fl").forEach((f, i) => setTimeout(() => f.style.width = f.dataset.w + "%", i * 90)));
 }
-
+drawX("xbars2", XB);
 
 // tar slip simulation
 const CODE = {
